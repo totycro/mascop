@@ -1,0 +1,4 @@
+[Project]
+Name=mascop
+Manager=KDevCMakeManager
+VersionControl=kdevgit
