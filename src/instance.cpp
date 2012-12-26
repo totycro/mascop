@@ -106,8 +106,4 @@ Instance::Instance(const char* filename)
 
 	if (readDbg) cerr << "m-m delay: " << sequenceDelays[1][1] << endl;
 	if (readDbg) cerr << "l-l delay: " << sequenceDelays[2][0] << endl;
-
-	//for (int i=0; i<sequenceDelays; i++) {
-
-
 }

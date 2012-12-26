@@ -3,7 +3,11 @@
 
 #include "instance.h"
 
-class AircraftLanding
+#include <gecode/int.hh>
+
+using namespace Gecode;
+
+class AircraftLanding : public Space
 {
 	Instance instance;
 

@@ -2,7 +2,7 @@
 
 #include "instance.h"
 
-AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
+AircraftLanding::AircraftLanding(const char* filename) : Space(), instance(filename)
 {
 
 }
