@@ -31,7 +31,9 @@ public:
 	vector<Runway*> runways;
 	vector<vector< int > > sequenceDelays;
 
-
 	Instance(const char* filename);
+
+	const vector<int> getAircraftEarlyCosts() const;
+	const vector<int> getAircraftLateCosts() const;
 };
 #endif // INSTANCE_H

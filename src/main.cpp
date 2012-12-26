@@ -8,8 +8,15 @@ int main(int argc, char **argv) {
 	BAB<AircraftLanding> bab(al);
 
 	AircraftLanding *sol;
+	int i = 0;
 	while ( (sol = bab.next()) ) {
+		cout << "iter " << i << "\n";
 		sol->print();
+		i++;
+	}
+
+	if (bab.stopped()) {
+		cout << "SUB optimal.\n";
 	}
 
 	/*

@@ -13,7 +13,7 @@ CPP_SOURCES = \
 DEBUG = 1
 
 CXXFLAGS = -Wall -Wno-non-virtual-dtor -pipe
-LDFLAGS =  -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist
+LDFLAGS =  -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist -lgecodeminimodel
 
 ifeq ($(DEBUG), 1)
   CXXFLAGS += -g -p -O0

@@ -107,3 +107,24 @@ Instance::Instance(const char* filename)
 	if (readDbg) cerr << "m-m delay: " << sequenceDelays[1][1] << endl;
 	if (readDbg) cerr << "l-l delay: " << sequenceDelays[2][0] << endl;
 }
+
+const std::vector< int > Instance::getAircraftEarlyCosts() const
+{
+	vector<int> res(aircrafts.size());
+	for (unsigned int i=0; i<aircrafts.size(); i++) {
+		res[i] = aircrafts[i]->earlyCost;
+	}
+	return res;
+}
+
+const std::vector< int > Instance::getAircraftLateCosts() const
+{
+	vector<int> res(aircrafts.size());
+	for (unsigned int i=0; i<aircrafts.size(); i++) {
+		res[i] = aircrafts[i]->lateCost;
+	}
+	return res;
+}
+
+
+
