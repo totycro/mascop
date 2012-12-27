@@ -17,7 +17,8 @@ class AircraftLanding : public MYSPACE
 
 	IntVarArray aircraftTimes;
 
-	IntVar costVar;
+//	IntVar costVar;
+	IntVar earlyCosts, lateCosts;
 
 public:
 	AircraftLanding(const char* filename);
