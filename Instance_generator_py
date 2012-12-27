@@ -89,5 +89,5 @@ class AircraftScheduling:
         res += "%s %s %d\n" %(AircraftScheduling.types[i], AircraftScheduling.types[j], self.sequence_delays[i][j])
     return res
 
-aircraft_scheduling = AircraftScheduling(4, 100)
+aircraft_scheduling = AircraftScheduling(10, 1000)
 print aircraft_scheduling

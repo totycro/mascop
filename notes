@@ -1,0 +1,10 @@
+
+
+lösung: 
+- aircrafts gemappt auf zeiten
+
+- zielfunktion:
+delay is max ( time-preferred, 0 )
+punishment is delay * factor
+
+langsamer ohne zielvariable (neuberechnung, wurde nur propagiert, variablen ohne branching haben kaum einfluss, im speziellen: domaingröße ist egal)
