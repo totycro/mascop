@@ -11,4 +11,45 @@ langsamer ohne zielvariable (neuberechnung, wurde nur propagiert, variablen ohne
 
 spielen mit branching, INT_VAL_SPLIT_MIN besser als INT_VAL_MAX
 
-runways
+runways:
+
+first attempt:
+	for (uint i=0; i<aircraftsNum; i++) {
+		for (uint j=0; j<aircraftsNum; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			// get minimum gap depending on type (statically known)
+			int minDelay = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
+
+			BoolVar sameRunway = expr(*this, aircraftRunways[i] == aircraftRunways[j]);
+
+			BoolVar isBefore = expr(*this, aircraftTimes[i] <= aircraftTimes[j]);
+
+			BoolVar maintainsDelay = expr(*this, aircraftTimes[i] + minDelay < aircraftTimes[j]);
+
+			rel(*this, (sameRunway && isBefore) >> maintainsDelay  );
+			//rel(*this, (isBefore) >> maintainsDelay  );
+		}
+	}
+
+
+
+second attempt, weniger constraints (wenige implikationen: (noch einmal langsamer)
+ rel(*this, (!sameRunway) || maintainsDelay_ij || maintainsDelay_ji)
+
+mapping auf timeAircrafts + max_landings:
+	timeAircrafts = SetVarArray(*this, instance.periods, IntSet::empty, IntSet(0, aircraftsNum), 0, runwaysNum);
+	for (uint i=0; i<aircraftsNum; i++) {
+		SetVar timeSet = SetVar(*this);
+		element(*this, timeAircrafts, aircraftTimes[i], timeSet);
+		rel(*this, singleton(i) <= timeSet);
+	}
+
+für alle 30 min intervalle:
+		rel(*this, sum(noElems) <= instance.max_landings_in_30_mins);
+
+
+
+INT_VAR_DEGREE_MIN viel besser als INT_VAR_NONE

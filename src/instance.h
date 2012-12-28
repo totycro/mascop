@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -35,5 +36,7 @@ public:
 
 	const vector<int> getAircraftEarlyCosts() const;
 	const vector<int> getAircraftLateCosts() const;
+
+	void printInstance(ostream& os = std::cout);
 };
 #endif // INSTANCE_H

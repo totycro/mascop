@@ -1,6 +1,8 @@
 #include "aircraftlanding.h"
 
 #include <gecode/gist.hh>
+#include <gecode/set.hh>
+#include <gecode/int.hh>
 
 #include "instance.h"
 
@@ -11,6 +13,9 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	aircraftTimes = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
 	aircraftRunways = IntVarArray(*this, aircraftsNum, 0, runwaysNum-1);
+
+	runwayAircrafts = SetVarArray(*this, runwaysNum,  IntSet::empty, IntSet(0, aircraftsNum-1), 0, aircraftsNum);
+	channel(*this, aircraftRunways, runwayAircrafts);
 
 	IntVar zero = IntVar(*this, 0,0); // helper variable
 
@@ -51,6 +56,25 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	}
 
+	timeAircrafts = SetVarArray(*this, instance.periods, IntSet::empty, IntSet(0, aircraftsNum), 0, runwaysNum);
+	for (uint i=0; i<aircraftsNum; i++) {
+		SetVar timeSet = SetVar(*this);
+		element(*this, timeAircrafts, aircraftTimes[i], timeSet);
+		rel(*this, singleton(i) <= timeSet);
+	}
+
+	// max landings
+	for (int i=0; i+30<instance.periods; i++) {
+
+		IntVarArray noElems(*this, 30, 0, aircraftsNum);
+
+		for (int j=0; j<30; j++) {
+			cardinality(*this, timeAircrafts[i+j], noElems[j]);
+		}
+
+		rel(*this, sum(noElems) < instance.max_landings_in_30_mins);
+	}
+
 	// depending on type, two airplanes have to have to be scheduled a few periods apart
 	// (this also prevents planes landing at the same time)
 	for (uint i=0; i<aircraftsNum; i++) {
@@ -68,11 +92,13 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 			BoolVar maintainsDelay = expr(*this, aircraftTimes[i] + minDelay < aircraftTimes[j]);
 
-			rel(*this, (sameRunway && isBefore) >> maintainsDelay  );
+			//rel(*this, (sameRunway && isBefore) >> maintainsDelay  );
+			//rel(*this, !(sameRunway && isBefore && (!maintainsDelay) ) );
 		}
 	}
 
-	branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
+	branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
+	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 	branch(*this, aircraftRunways, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 }
 
@@ -86,6 +112,8 @@ AircraftLanding::AircraftLanding(bool share, AircraftLanding& al) : MYSPACE(shar
 	aircraftTimes.update(*this, share, al.aircraftTimes);
 	costVar.update(*this, share, al.costVar);
 	aircraftRunways.update(*this, share, al.aircraftRunways);
+	runwayAircrafts.update(*this, share, al.runwayAircrafts);
+	timeAircrafts.update(*this, share, al.timeAircrafts);
 }
 
 AircraftLanding::~AircraftLanding()
@@ -102,6 +130,8 @@ void AircraftLanding::print(ostream& os)
 	os << "Solution: (cost: " << cost().val() << ") "<<endl;
 	os << "Times: " << aircraftTimes << endl;
 	os << "Runways: " << aircraftRunways << endl;
+	os << "Runways2: " << runwayAircrafts << endl;
+	os << "timeair: " << timeAircrafts << endl;
 }
 
 

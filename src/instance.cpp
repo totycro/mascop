@@ -21,7 +21,7 @@ AircraftType str2aircrafttype(const string& str)
 Instance::Instance(const char* filename)
 {
 
-	bool readDbg = true;
+	bool readDbg = false;
 
 	if (readDbg) cerr << "reading " << filename << endl;
 
@@ -126,5 +126,16 @@ const std::vector< int > Instance::getAircraftLateCosts() const
 	return res;
 }
 
+
+void Instance::printInstance(ostream& os)
+{
+	os << "Instance:\n";
+	os << "Preferred: ";
+	for (int i=0; i<aircrafts.size(); i++) {
+		os << aircrafts[i]->preferred << ", ";
+	}
+	os << endl;
+
+}
 
 

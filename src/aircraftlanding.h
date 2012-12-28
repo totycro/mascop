@@ -20,6 +20,10 @@ class AircraftLanding : public MYSPACE
 
 	IntVarArray aircraftRunways;
 
+	SetVarArray runwayAircrafts;
+
+	SetVarArray timeAircrafts;
+
 	IntVar costVar;
 
 public:

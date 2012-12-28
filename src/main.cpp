@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
 
 		BAB<AircraftLanding> bab(al);
 
+
 		AircraftLanding *sol;
 		int i = 0;
 		while ( (sol = bab.next()) ) {
@@ -29,9 +30,6 @@ int main(int argc, char **argv) {
 			sol->print();
 			i++;
 		}
-
-		Search::Statistics stats = bab.statistics();
-
 
 
 		if (bab.stopped()) {
@@ -53,6 +51,8 @@ int main(int argc, char **argv) {
 			cout << "No solution.\n";
 		}
 	}
+
+	Instance(argv[1]).printInstance();
 
 	return 0;
 }
