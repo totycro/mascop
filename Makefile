@@ -13,7 +13,7 @@ CPP_SOURCES = \
 DEBUG = 1
 
 CXXFLAGS = -Wall -Wno-non-virtual-dtor -pipe
-LDFLAGS =  -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist -lgecodeminimodel
+LDFLAGS =  -lgecodesearch -lgecodeint -lgecodeset -lgecodekernel -lgecodesupport -lgecodegist -lgecodeminimodel
 
 ifeq ($(DEBUG), 1)
   CXXFLAGS += -g -p -O0
@@ -183,8 +183,7 @@ src/main.o: /usr/include/gecode/int/int-set-2.hpp
 src/main.o: /usr/include/gecode/int/array.hpp
 src/main.o: /usr/include/gecode/int/extensional/dfa.hpp
 src/main.o: /usr/include/gecode/int/extensional/tuple-set.hpp
-src/main.o: /usr/include/gecode/minimodel.hh /usr/include/gecode/set.hh
-src/main.o: /usr/include/gecode/set/exception.hpp
+src/main.o: /usr/include/gecode/set.hh /usr/include/gecode/set/exception.hpp
 src/main.o: /usr/include/gecode/set/limits.hpp
 src/main.o: /usr/include/gecode/set/var-imp.hpp
 src/main.o: /usr/include/gecode/set/var-imp/delta.hpp
@@ -202,6 +201,7 @@ src/main.o: /usr/include/gecode/set/view/print.hpp
 src/main.o: /usr/include/gecode/set/var/print.hpp
 src/main.o: /usr/include/gecode/set/array-traits.hpp
 src/main.o: /usr/include/gecode/set/array.hpp
+src/main.o: /usr/include/gecode/minimodel.hh
 src/main.o: /usr/include/gecode/int/linear.hh
 src/main.o: /usr/include/gecode/int/linear/int-bin.hpp
 src/main.o: /usr/include/gecode/int/linear/int-ter.hpp
@@ -369,7 +369,6 @@ src/aircraftlanding.o: /usr/include/gecode/int/int-set-2.hpp
 src/aircraftlanding.o: /usr/include/gecode/int/array.hpp
 src/aircraftlanding.o: /usr/include/gecode/int/extensional/dfa.hpp
 src/aircraftlanding.o: /usr/include/gecode/int/extensional/tuple-set.hpp
-src/aircraftlanding.o: /usr/include/gecode/minimodel.hh
 src/aircraftlanding.o: /usr/include/gecode/set.hh
 src/aircraftlanding.o: /usr/include/gecode/set/exception.hpp
 src/aircraftlanding.o: /usr/include/gecode/set/limits.hpp
@@ -389,6 +388,7 @@ src/aircraftlanding.o: /usr/include/gecode/set/view/print.hpp
 src/aircraftlanding.o: /usr/include/gecode/set/var/print.hpp
 src/aircraftlanding.o: /usr/include/gecode/set/array-traits.hpp
 src/aircraftlanding.o: /usr/include/gecode/set/array.hpp
+src/aircraftlanding.o: /usr/include/gecode/minimodel.hh
 src/aircraftlanding.o: /usr/include/gecode/int/linear.hh
 src/aircraftlanding.o: /usr/include/gecode/int/linear/int-bin.hpp
 src/aircraftlanding.o: /usr/include/gecode/int/linear/int-ter.hpp

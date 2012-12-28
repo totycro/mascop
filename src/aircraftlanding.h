@@ -4,6 +4,7 @@
 #include "instance.h"
 
 #include <gecode/int.hh>
+#include <gecode/set.hh>
 #include <gecode/minimodel.hh>
 #include <gecode/search.hh>
 
@@ -17,6 +18,8 @@ class AircraftLanding : public MYSPACE
 
 	IntVarArray aircraftTimes;
 
+	IntVarArray aircraftRunways;
+
 	IntVar costVar;
 
 public:
@@ -27,7 +30,7 @@ public:
 
 	virtual IntVar cost() const;
 
-	virtual void print(ostream& os = std::cerr);
+	virtual void print(ostream& os = std::cout);
 
 };
 
