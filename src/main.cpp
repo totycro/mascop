@@ -24,12 +24,20 @@ int main(int argc, char **argv) {
 		BAB<AircraftLanding> bab(al);
 
 
-		AircraftLanding *sol;
+		AircraftLanding *sol, *lastSol=0;
 		int i = 0;
+
 		while ( (sol = bab.next()) ) {
 			cout << "iter " << i << "\n";
 			sol->print();
+			lastSol = sol;
 			i++;
+		}
+
+		if (lastSol != 0) {
+			lastSol->print(cerr, true);
+		} else {
+			cerr << "\nno solution.\n";
 		}
 
 
@@ -54,7 +62,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	Instance(argv[1]).printInstance();
+	cout << endl;
+	Instance::Instance(argv[1]).printInstance();
 
 	return 0;
 }

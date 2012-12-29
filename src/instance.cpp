@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <stdexcept>
 
+namespace Instance {
+
 AircraftType str2aircrafttype(const string& str)
 {
 	if (str == "small") {
@@ -130,6 +132,8 @@ const std::vector< int > Instance::getAircraftLateCosts() const
 void Instance::printInstance(ostream& os)
 {
 	os << "Instance:\n";
+	os << "runways: " << runways.size() << endl;
+	os << "aircrafts: " << aircrafts.size() << endl;
 	os << "Preferred: ";
 	for (unsigned int i=0; i<aircrafts.size(); i++) {
 		os << aircrafts[i]->preferred << ", ";
@@ -138,4 +142,5 @@ void Instance::printInstance(ostream& os)
 
 }
 
+}
 

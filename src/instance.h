@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace Instance {
+
 enum AircraftType { SMALL, MEDIUM, LARGE, NUMBER_OF_AIRCRAFT_TYPES };
 
 AircraftType str2aircrafttype(const string& str);
@@ -20,7 +22,7 @@ struct Aircraft {
 
 struct Runway {
 	string name;
-	vector<int> unavailableStart, unavailableEnd;
+	vector<unsigned int> unavailableStart, unavailableEnd;
 };
 
 struct Instance {
@@ -39,4 +41,7 @@ public:
 
 	void printInstance(ostream& os = std::cout);
 };
+
+
+}
 #endif // INSTANCE_H

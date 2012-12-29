@@ -12,8 +12,8 @@ m02 medium 0 10 60 1 1
 l01 large 0 10 120 2 4
 
 Runways_specification:
-r1 0
-r2 2 20 40 100  110
+r1 1 9 11
+r2 1 9 11 
 
 Sequence_delays:
 small small 3

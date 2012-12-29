@@ -24,7 +24,7 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		IntVarArray aircraftEarlyAmount = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
 
 		for (uint i=0; i<aircraftsNum; i++) {
-			Aircraft *curAircraft = instance.aircrafts[i];
+			Instance::Aircraft *curAircraft = instance.aircrafts[i];
 
 			dom(*this, aircraftTimes[i], curAircraft->min, curAircraft->max);
 
@@ -56,7 +56,7 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	}
 
-	timeAircraftsRunways = IntVarArray(*this, instance.periods * runwaysNum, 0, aircraftsNum);
+	timeAircraftsRunways = IntVarArray(*this, instance.periods * runwaysNum, -1, aircraftsNum); // allow unassigned
 
 	//Matrix<IntVarArray> timeAircraftsRunwaysMatrix(timeAircraftsRunways, runwaysNum, instance.periods);
 
@@ -74,7 +74,21 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		/* timeAircraftsRunwaysMatrix [ aircraftRunways[i] ] = i */
 		IntVar iVar(*this, i, i);
 		// gecode fail, doesn't suport as matrix, but this:
-		element(*this, timeAircraftsRunways, expr(*this, aircraftRunways[i] * aircraftTimes[i]), iVar);
+		element(*this, timeAircraftsRunways, expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]), iVar);
+	}
+
+	// runway limitations
+	IntVar varInvalid(*this, -1, -1);
+	for (uint i=0; i<runwaysNum; i++) {
+		Instance::Runway *rw = instance.runways[i];
+
+		for (uint j=0; j<rw->unavailableStart.size(); j++) {
+
+			for (uint k=rw->unavailableStart[j]; k<rw->unavailableEnd[j]; k++) {
+				//cout << "deact: " << (<< endl;
+				element(*this, timeAircraftsRunways, expr(*this, (i*instance.periods) +  k), varInvalid);
+			}
+		}
 	}
 
 
@@ -142,16 +156,28 @@ IntVar AircraftLanding::cost() const
 	return costVar;
 }
 
-void AircraftLanding::print(ostream& os)
+void AircraftLanding::print(ostream& os, bool verbose)
 {
 	os << "Solution: (cost: " << cost().val() << ") "<<endl;
 	os << "Times: " << aircraftTimes << endl;
 	os << "Runways: " << aircraftRunways << endl;
 	os << "Runways2: " << runwayAircrafts << endl;
-	os << "timeair: " << timeAircrafts << endl;
 
-	for (unsigned int i=0; i<timeAircraftsRunways.size(); i++) {
-		os << "timeair " << i << ": " << timeAircraftsRunways[i] << endl;
+
+	if (verbose) {
+		os << "timeair: " << timeAircrafts << endl;
+		for (unsigned int i=0; i<instance.runways.size(); i++) {
+			os << "timeair rw " << i << ": " << timeAircraftsRunways.slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
+
+		}
+
+		/*
+		for (unsigned int i=0; i<timeAircraftsRunways.size(); i++) {
+			os << "timeair " << i << ": " << timeAircraftsRunways[i] << endl;
+		}
+		*/
+	} else {
+		os << "verbose deactivated, skipping timeair\n";
 	}
 }
 

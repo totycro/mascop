@@ -14,7 +14,7 @@ using namespace Gecode;
 
 class AircraftLanding : public MYSPACE
 {
-	Instance instance;
+	Instance::Instance instance;
 
 	IntVarArray aircraftTimes;
 
@@ -36,7 +36,7 @@ public:
 
 	virtual IntVar cost() const;
 
-	virtual void print(ostream& os = std::cout);
+	virtual void print(ostream& os = std::cout, bool verbose=false);
 
 };
 
