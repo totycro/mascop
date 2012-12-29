@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 	*/
 
 	{
+		cout << "running bab\n";
 
 		BAB<AircraftLanding> bab(al);
 
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
 
 	if (false)
 	{
+		cout << "running dfs\n";
 		DFS<AircraftLanding> dfs(al);
 
 		AircraftLanding * sol = dfs.next();

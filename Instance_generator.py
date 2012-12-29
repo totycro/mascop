@@ -53,9 +53,11 @@ class Runway:
 class AircraftScheduling:
   """Problem instance for the Aircraft Scheduling Problem"""
   types = ["small", "medium", "large"]
-  def __init__(self, max_runways, max_aircrafts):
-    runways = random.randint(2, max_runways)
-    aircrafts = random.randint(10, max_aircrafts)
+  #def __init__(self, max_runways, max_aircrafts):
+  def __init__(self, runways, aircrafts):
+    #runways = random.randint(2, max_runways)
+    #aircrafts = random.randint(10, max_aircrafts)
+
     self.periods = 120
     self.aircrafts = []
     for i in range(0,aircrafts):
@@ -89,5 +91,19 @@ class AircraftScheduling:
         res += "%s %s %d\n" %(AircraftScheduling.types[i], AircraftScheduling.types[j], self.sequence_delays[i][j])
     return res
 
-aircraft_scheduling = AircraftScheduling(4, 100)
+
+runways = 4
+aircrafts = 100
+
+import sys
+
+if len(sys.argv) > 1:
+	runways = int(sys.argv[1])
+if len(sys.argv) > 2:
+	aircrafts = int(sys.argv[2])
+
+print >>sys.stderr, 'runways:', runways
+print >>sys.stderr, 'aircrafts:', aircrafts
+
+aircraft_scheduling = AircraftScheduling(runways, aircrafts)
 print aircraft_scheduling

@@ -131,7 +131,7 @@ void Instance::printInstance(ostream& os)
 {
 	os << "Instance:\n";
 	os << "Preferred: ";
-	for (int i=0; i<aircrafts.size(); i++) {
+	for (unsigned int i=0; i<aircrafts.size(); i++) {
 		os << aircrafts[i]->preferred << ", ";
 	}
 	os << endl;

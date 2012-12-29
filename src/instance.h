@@ -26,11 +26,11 @@ struct Runway {
 struct Instance {
 public:
 
-	int periods;
-	int max_landings_in_30_mins;
+	unsigned int periods;
+	unsigned int max_landings_in_30_mins;
 	vector<Aircraft*> aircrafts;
 	vector<Runway*> runways;
-	vector<vector< int > > sequenceDelays;
+	vector<vector< unsigned int > > sequenceDelays;
 
 	Instance(const char* filename);
 

@@ -56,6 +56,11 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	}
 
+	timeAircraftsRunways = IntVarArray(*this, instance.periods * runwaysNum, 0, aircraftsNum);
+
+	//Matrix<IntVarArray> timeAircraftsRunwaysMatrix(timeAircraftsRunways, runwaysNum, instance.periods);
+
+	// sets for each period with aircrafts that land then (all runways)
 	timeAircrafts = SetVarArray(*this, instance.periods, IntSet::empty, IntSet(0, aircraftsNum), 0, runwaysNum);
 	for (uint i=0; i<aircraftsNum; i++) {
 		SetVar timeSet = SetVar(*this);
@@ -63,12 +68,22 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		rel(*this, singleton(i) <= timeSet);
 	}
 
+
+	// 3-dimensional repr:
+	for (uint i=0; i<aircraftsNum; i++) {
+		/* timeAircraftsRunwaysMatrix [ aircraftRunways[i] ] = i */
+		IntVar iVar(*this, i, i);
+		// gecode fail, doesn't suport as matrix, but this:
+		element(*this, timeAircraftsRunways, expr(*this, aircraftRunways[i] * aircraftTimes[i]), iVar);
+	}
+
+
 	// max landings
-	for (int i=0; i+30<instance.periods; i++) {
+	for (unsigned int i=0; i+30<instance.periods; i++) {
 
 		IntVarArray noElems(*this, 30, 0, aircraftsNum);
 
-		for (int j=0; j<30; j++) {
+		for (unsigned int j=0; j<30; j++) {
 			cardinality(*this, timeAircrafts[i+j], noElems[j]);
 		}
 
@@ -77,8 +92,8 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	// depending on type, two airplanes have to have to be scheduled a few periods apart
 	// (this also prevents planes landing at the same time)
-	for (uint i=0; i<aircraftsNum; i++) {
-		for (uint j=0; j<aircraftsNum; j++) {
+	for (unsigned int i=0; i<aircraftsNum; i++) {
+		for (unsigned int j=0; j<aircraftsNum; j++) {
 			if (j == i) {
 				continue;
 			}
@@ -114,6 +129,8 @@ AircraftLanding::AircraftLanding(bool share, AircraftLanding& al) : MYSPACE(shar
 	aircraftRunways.update(*this, share, al.aircraftRunways);
 	runwayAircrafts.update(*this, share, al.runwayAircrafts);
 	timeAircrafts.update(*this, share, al.timeAircrafts);
+
+	timeAircraftsRunways.update(*this, share, al.timeAircraftsRunways);
 }
 
 AircraftLanding::~AircraftLanding()
@@ -132,6 +149,10 @@ void AircraftLanding::print(ostream& os)
 	os << "Runways: " << aircraftRunways << endl;
 	os << "Runways2: " << runwayAircrafts << endl;
 	os << "timeair: " << timeAircrafts << endl;
+
+	for (unsigned int i=0; i<timeAircraftsRunways.size(); i++) {
+		os << "timeair " << i << ": " << timeAircraftsRunways[i] << endl;
+	}
 }
 
 
