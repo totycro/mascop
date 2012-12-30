@@ -48,8 +48,8 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	*/
 
 
-	runwayAircrafts = SetVarArray(*this, runwaysNum,  IntSet::empty, IntSet(0, aircraftsNum-1), 0, aircraftsNum);
-	channel(*this, aircraftRunways, runwayAircrafts);
+	//runwayAircrafts = SetVarArray(*this, runwaysNum,  IntSet::empty, IntSet(0, aircraftsNum-1), 0, aircraftsNum);
+	//channel(*this, aircraftRunways, runwayAircrafts);
 
 	IntVar zero = IntVar(*this, 0,0); // helper variable
 
@@ -184,7 +184,7 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	*/
 
 	//better, with index to next runway overlap problem
-	if (true) {
+	if (false) {
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		for (unsigned int j=i+1; j<aircraftsNum; j++) {
 			int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
@@ -206,9 +206,11 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_RANGE_MAX);
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
-	branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_RND);
+	//branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_SPLIT_MIN);
+	//branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MAX);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
-	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_MAX);
+
+	branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_RND);
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
@@ -226,7 +228,7 @@ AircraftLanding::AircraftLanding(bool share, AircraftLanding& al) : MYSPACE(shar
 	aircraftTimes.update(*this, share, al.aircraftTimes);
 	costVar.update(*this, share, al.costVar);
 	aircraftRunways.update(*this, share, al.aircraftRunways);
-	runwayAircrafts.update(*this, share, al.runwayAircrafts);
+	//runwayAircrafts.update(*this, share, al.runwayAircrafts);
 	timeAircrafts.update(*this, share, al.timeAircrafts);
 
 	timeAircraftsRunways.update(*this, share, al.timeAircraftsRunways);
@@ -249,9 +251,9 @@ void AircraftLanding::print(ostream& os, bool verbose) const
 	os << "Times: " << aircraftTimes << endl;
 	os << "timeair: " << timeAircrafts << endl;
 	return;
-	os << "seq: " << aircraftSequence << endl;
 	os << "Runways: " << aircraftRunways << endl;
-	os << "Runways2: " << runwayAircrafts << endl;
+	//os << "Runways2: " << runwayAircrafts << endl;
+	os << "seq: " << aircraftSequence << endl;
 
 
 	if (verbose) {

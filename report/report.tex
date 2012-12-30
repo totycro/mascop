@@ -185,17 +185,65 @@ In the variation, the union of all sets of airplanes for each 30-minute-frame is
 As this change does not change the semantics, the number of solutions and failed nodes stays the same, but depending on the instance, the runtime is sometimes noticably affected with some instances being solved nearly twice as fast whereas others show no significant change.
 This suggests that the internal propagation mechanism of Gecode can in some cases deal more efficiently with the second variation.
 
-
-
 % branching
+\marginnote{Branching}
 Based on these constraints, it is possible to do investigations on the branching parameters. 
 For branching, strategies can be selected for which variable to branch on as well as which values of the domain to pick.
 It is easily empirically evident that these parameters change the required computation time by multiple orders of magnitude and decide whether a formulation finishes within instant or is computaitonally infeasible.
 
-On instances, that are already tightly constrainted by the \Clandings-constraint, the \ilc{INT_VAR_AFC_MAX}-selector has shown to be exceptionally efficient.
+Due to the size of the search space, comprehensive measurements and tests with larger instances or selectors, that seem less promising, would exceed the scope of this assignment. Therefore I'm focussing on managable instance sizes and take a closer look at certain cases.
+
+Instances with no severe constaint are usually solved quickly using the \ilc{INT\_VAR\_NONE}-selector.
+However on instances that are already tightly constrainted by the \Clandings-constraint, the \ilc{INT\_VAR\_AFC\_MAX}- along with the \ilc{INT\_VAR\_SIZE\_MIN}-selector has shown to be exceptionally efficient.
+They have in common that they provoke quick failures, thereby cutting the search space. Other selectors preferring variables with large domains lead to disastrous runtimes up to the point where it makes no sense to include them in this investigation.
 
 
-%Since preferred values for landing times of common instances are somewhere between the minima and maxima, choosing values around the extremes of the domain is clearly detrimental and also indeed infeasible even for small instances of around 20 aircrafts.
+Figure \ref{fig:res1} shows measurements using different combination of promising selectors.
+As not many constraints have been posted so far, ordering based on the degree of variables somewhat corresponds to having no special variable selection order. Therefore other selectors which are geared towards quick failures and are based on the node degree don't have any effect in this case.
+
+Since preferred values for landing times of common instances are somewhere between the minima and maxima, choosing values around the extremes of the domain is not optimal as the direct comparison of \ilc{INT\_VAL\_MAX} and \ilc{INT\_VAL\_MED} shows, where the latter is faster by a factor of roughly 2.
+
+\begin{figure}[htbp]
+	\centering
+	\begin{tabular}{|p{6.5em}|c|c|c|c|c|c|}
+	\hline
+		 8 aircrafts,
+		 & \multicolumn{2}{c|}{\ilc{VAR\_AFC\_MAX}} &
+			\multicolumn{2}{c|}{\ilc{VAR\_SIZE\_MIN}}  &
+			\multicolumn{2}{c|}{\ilc{VAR\_NONE}}   \\
+	 3 per 30 mins&
+	 
+	 		time & nodes &
+	  	time & nodes &
+	    time & nodes \\ \hline
+
+		 \ilc{VAL\_MAX}
+
+		 & 0.78 & 3054
+		 & 0.53 & 2141
+		 & 6.80 & 51245 
+
+		 \\ \hline
+		 \ilc{VAL\_MED}
+
+		 & 0.32 & 1807
+		 & 0.18 & 563
+		 & 9.74 & 74163
+	
+		 
+		 \\ \hline
+		 \ilc{VAL\_SPLIT\_MAX}
+
+		 & 1.75 & 12361
+		 & 0.57 & 2376
+		 & 7.31 & 59378 \\ \hline
+
+	 
+\end{tabular}
+	\label{fig:res1}
+\caption{Measurements of the run time behaviour on an instance containing 8 airplanes scheduled in 120 periods with a maximum of 3 per 30 minutes. The time is given in seconds, ``node'' means the number of nodes expanded during the search.}
+\end{figure}
+
 
  
 

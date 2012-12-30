@@ -70,6 +70,13 @@ int main(int argc, char **argv) {
 		} else {
 		}
 
+		Search::Statistics stats = bab.statistics();
+
+		cout << endl << "Stats:\n";
+		cout << "expanded: " << stats.node << endl;
+		cout << "failed: " << stats.fail << endl;
+		cout << "depth: " << stats.depth << endl;
+		cout << "propagate: " << stats.propagate << endl;
 
 	}
 
