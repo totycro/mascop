@@ -10,7 +10,7 @@ CPP_SOURCES = \
 	$(SRCDIR)/aircraftlanding.cpp \
 	$(SRCDIR)/instance.cpp
 
-DEBUG = 1
+DEBUG = 0
 
 CXXFLAGS = -Wall -Wno-non-virtual-dtor -pipe
 LDFLAGS =  -lgecodesearch -lgecodeint -lgecodeset -lgecodekernel -lgecodesupport -lgecodegist -lgecodeminimodel

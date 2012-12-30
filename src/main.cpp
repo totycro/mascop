@@ -10,6 +10,19 @@ int main(int argc, char **argv) {
 
 	al = new AircraftLanding(argv[1]);
 
+	bool gist = false;
+	bool bab = true;
+
+	if (argc > 2) {
+		if (string(argv[2]) == "gist") {
+			gist = true;
+			bab = false;
+		} else {
+			cerr << "invalid parameter: " << argv[2] << endl;
+			exit(1);
+		}
+	}
+
 	/*
 	try {
 		al = new AircraftLanding(argv[1]);
@@ -20,7 +33,7 @@ int main(int argc, char **argv) {
 	}
 	*/
 
-	if (false) {
+	if (gist) {
 		Gist::Print<AircraftLanding> p("al");
 		Gist::Options o;
 		o.inspect.click(&p);
@@ -28,7 +41,7 @@ int main(int argc, char **argv) {
 	}
 
 
-	if (true)
+	if (bab)
 	{
 		cout << "running bab\n";
 
@@ -56,6 +69,7 @@ int main(int argc, char **argv) {
 			cout << "SUB optimal.\n";
 		} else {
 		}
+
 
 	}
 
