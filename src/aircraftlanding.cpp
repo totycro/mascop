@@ -94,7 +94,6 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	// 3-dimensional repr:
 
-	/*
 	for (uint i=0; i<aircraftsNum; i++) {
 		// timeAircraftsRunwaysMatrix [ aircraftRunways[i] ] = i
 		IntVar iVar(*this, i, i);
@@ -119,7 +118,6 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 			}
 		}
 	}
-	*/
 
 
 	// sets for each period with aircrafts that land then (all runways)
@@ -144,9 +142,6 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		} else {
 			*/
 			//*/
-			// TODO
-			// try: timeAircrafts.slice(i, 1, 30);
-			// or: among (x_0, ..., x_30), {0..aircrafts}, 0, max_landings_in_30_mins
 
 			SetVar uni(*this, IntSet::empty, IntSet(0, aircraftsNum), 0, instance.max_landings_in_30_mins);
 			//SetVar uni(*this);
@@ -211,11 +206,12 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 
 	branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
+	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_RND);
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
-	//branch(*this, aircraftRunways, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
+	branch(*this, aircraftRunways, INT_VAR_SIZE_MIN, INT_VAL_MAX);
 }
 
 Space* AircraftLanding::copy(bool share)
@@ -249,9 +245,9 @@ void AircraftLanding::print(ostream& os, bool verbose) const
 {
 	os << "Solution: (cost: " << cost().min() << "," << cost().max() << ") "<<endl;
 	os << "Times: " << aircraftTimes << endl;
+	os << "Runways: " << aircraftRunways << endl;
 	os << "timeair: " << timeAircrafts << endl;
 	return;
-	os << "Runways: " << aircraftRunways << endl;
 	//os << "Runways2: " << runwayAircrafts << endl;
 	os << "seq: " << aircraftSequence << endl;
 
