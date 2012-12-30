@@ -18,6 +18,8 @@ class AircraftLanding : public MYSPACE
 
 	IntVarArray aircraftTimes;
 
+	IntVarArray aircraftSequence;
+
 	IntVarArray aircraftRunways;
 
 	SetVarArray runwayAircrafts;
@@ -36,7 +38,7 @@ public:
 
 	virtual IntVar cost() const;
 
-	virtual void print(ostream& os = std::cout, bool verbose=false);
+	virtual void print(ostream& os = std::cout, bool verbose=false) const;
 
 };
 

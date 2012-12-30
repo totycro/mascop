@@ -1,0 +1,138 @@
+\documentclass[,%fontsize=11pt,%
+			paper=a4,% 
+			%DIV12, % mehr text pro seite als defaultyyp
+			DIV12,
+			%DIV=calc,%
+			%twoside=false,%
+			liststotoc,
+			bibtotoc,
+			draft=false,% final|draft % draft ist platzsparender (kein code, bilder..)
+			%titlepage,
+			numbers=noendperiod
+			]{scrartcl}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+\usepackage{bussproofs}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,backgrounds,graphs,%
+matrix,patterns,arrows,decorations.pathmorphing,decorations.pathreplacing,%
+positioning,fit,calc,decorations.text,shadows%
+}
+
+\input{/home/totycro/stud/latex-common/latex_header.tex}
+
+
+%\usepackage{vaucanson-g}
+\usepackage{amssymb}
+\usepackage{latexsym}
+
+% for color-highlighted code
+%\usepackage{color} % for grey comments
+%\usepackage{alltt}
+
+%\usepackage[doublespacing]{setspace}
+\usepackage[onehalfspacing]{setspace}
+%\usepackage[singlespacing]{setspace}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{comment}
+\usepackage{color}
+\usepackage[final]{listings} % sourcecode in document
+\usepackage{url}      % for urls
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+
+%\usepackage[square]{natbib} % \cite ; square|round etc.
+\usepackage[numbers,square]{natbib}
+%\usepackage[square, authoryear]{natbib}
+
+%\bibliographystyle{plain}
+%\bibliographystyle{alpha}
+%\bibliographystyle{alphadin}
+%\bibliographystyle{dinat}
+%\bibliographystyle{chicago}
+%\bibliographystyle{plainnat}
+
+%\bibdata{bib.bib}
+
+\renewcommand*{\partformat}{\partname\ \thepart\ -}
+\let\partheadmidvskip\
+
+% smaller url style
+\makeatletter
+\def\url@leostyle{%
+\@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\ttfamily}}}
+\makeatother
+\urlstyle{leo}
+
+\newcommand{\myfig}[5] {
+ \begin{figure}[tbph]
+	 \centering
+	 \includegraphics[#3]{#1}
+	 \caption[#4]{#5}
+	 \label{fig:#2}
+ \end{figure}
+}
+
+\title{Report on the implementation\\of the Aircraft Landing Problem}
+\subtitle{\hfill \\ Modeling and Solving Constrained Optimization Problems}
+\author{\hfill \\ Bernhard Mallinger \\ 0707663}
+%%\subtitle{}
+%\date{13. November 2007}
+%\publishers{Betreut durch Univ.-Ass. Dipl.-Ing. Christian Schauer, BSc}
+
+%\usepackage{fancyhdr}
+%\setlength{\headrulewidth}{0.0pt}
+\pagestyle{plain}
+
+\definecolor{grey}{gray}{.35} % for grey commnts
+\lstset{language=Python,%
+escapeinside={@}{@},
+extendedchars=false,%
+%inputencoding=utf8x,%
+basicstyle=\ttfamily\small,%
+commentstyle=\color{grey},%
+%keywordstyle=,% no bold tt in standard font
+%captionpos=b,
+tabsize=2,
+showstringspaces=false,
+breaklines=true,
+breakindent=0pt,
+numbers=left
+}
+
+% just for screen-display!
+%\usepackage{newcent}
+
+%\newcommand{\ex}[2]{\section*{Exercise #1} \textbf{#2} }
+%\newcommand{\ex}[2]{\subsection*{Exercise #1: #2} }
+
+\newcommand{\myt}[1]{\ensuremath{\;\text{ #1 }\;}}
+\newcommand{\myts}[1]{\ensuremath{\text{ #1 }}}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Getting acquainted with the problem, modeling and gecode}
+
+Due to my lack of major experience in any of the three mentioned fields, I decided to start by relatively freely thinking about and trying different possible ways of modeling.
+This phase should not have the concrete demand of yielding useable solutions but to produce experience and generate a feel as to which modeling decisions actually lead to correct results and furthermore which of the ones that are correct are computationally feasible.
+
+
+
+
+
+
+\end{document}

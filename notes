@@ -57,4 +57,14 @@ INT_VAR_DEGREE_MIN viel besser als INT_VAR_NONE
 
 3-dim
 
-deactivate runways
+deactivate runways: in 3-dim, force values to -1
+
+
+sequence: SLS -> NO, use numbers, do constraints on numbers
+only need sequence of airplanes
+
+
+try delay between landings depending on type later when airplanes are mapped on runways * airplanes, formulation delay_01 still very unfeasible 
+
+
+delay between aircraft landings only if landing times can possibly overlap (including delay). statically known

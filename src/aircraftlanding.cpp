@@ -3,6 +3,7 @@
 #include <gecode/gist.hh>
 #include <gecode/set.hh>
 #include <gecode/int.hh>
+#include <gecode/set/sequence.hh>
 
 #include "instance.h"
 
@@ -13,6 +14,36 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	aircraftTimes = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
 	aircraftRunways = IntVarArray(*this, aircraftsNum, 0, runwaysNum-1);
+
+	aircraftSequence = IntVarArray(*this, aircraftsNum, 0, aircraftsNum-1);
+	distinct(*this, aircraftSequence);
+	//nvalues(*this, aircraftSequence, IRT_EQ, aircraftsNum);
+
+	for (unsigned int i=0; i<aircraftsNum; i++) {
+		for (unsigned int j=0; j<aircraftsNum; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			BoolVar isBefore = expr(*this, aircraftTimes[i] < aircraftTimes[j]);
+
+			IntVar iIndex(*this, 0, aircraftsNum-1);
+			IntVar jIndex(*this, 0, aircraftsNum-1);
+			element(*this, aircraftSequence, iIndex, i);
+			element(*this, aircraftSequence, jIndex, j);
+
+			BoolVar isSeqBefore = expr(*this, iIndex < jIndex);
+
+			//rel(*this, isBefore >> isSeqBefore);
+		}
+	}
+
+	int * s = new int[3];
+	s[0] = 5;
+	s[1] = 0;
+	s[2] = 3;
+	sequence(*this, aircraftSequence, IntSet(s, 3), 5, 0, 1);
+
 
 	runwayAircrafts = SetVarArray(*this, runwaysNum,  IntSet::empty, IntSet(0, aircraftsNum-1), 0, aircraftsNum);
 	channel(*this, aircraftRunways, runwayAircrafts);
@@ -77,8 +108,12 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		element(*this, timeAircraftsRunways, expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]), iVar);
 	}
 
-	// runway limitations
 	IntVar varInvalid(*this, -1, -1);
+
+	// unused spaces are -1
+	count(*this, timeAircraftsRunways, varInvalid, IRT_EQ, timeAircraftsRunways.size() - aircraftsNum);
+
+	// runway limitations
 	for (uint i=0; i<runwaysNum; i++) {
 		Instance::Runway *rw = instance.runways[i];
 
@@ -91,7 +126,6 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	}
 
-
 	// max landings
 	for (unsigned int i=0; i+30<instance.periods; i++) {
 
@@ -100,12 +134,16 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		for (unsigned int j=0; j<30; j++) {
 			cardinality(*this, timeAircrafts[i+j], noElems[j]);
 		}
+		// TODO
+		// try: timeAircrafts.slice(i, 1, 30);
+		// or: among (x_0, ..., x_30), {0..aircrafts}, 0, max_landings_in_30_mins
 
 		rel(*this, sum(noElems) < instance.max_landings_in_30_mins);
 	}
 
 	// depending on type, two airplanes have to have to be scheduled a few periods apart
 	// (this also prevents planes landing at the same time)
+	/*
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		for (unsigned int j=0; j<aircraftsNum; j++) {
 			if (j == i) {
@@ -125,8 +163,30 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 			//rel(*this, !(sameRunway && isBefore && (!maintainsDelay) ) );
 		}
 	}
+	*/
+
+	//better, with index to next runway overlap problem
+	if (false) {
+	for (unsigned int i=0; i<aircraftsNum; i++) {
+		for (unsigned int j=i+1; j<aircraftsNum; j++) {
+			int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
+			int minDelay_ji = instance.sequenceDelays[instance.aircrafts[j]->type][instance.aircrafts[i]->type];
+
+			IntVar iPos = expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]);
+			IntVar jPos = expr(*this, (aircraftRunways[j]*instance.periods) + aircraftTimes[j]);
+
+			BoolVar maintainsDelay_ij = expr(*this, iPos + minDelay_ij < jPos);
+			BoolVar maintainsDelay_ji = expr(*this, jPos + minDelay_ji < iPos);
+
+			//cerr << "p " << minDelay_ij << " " << minDelay_ji << endl;
+
+			rel(*this, maintainsDelay_ij || maintainsDelay_ji);
+		}
+	}
+}
 
 	branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
+	branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 	branch(*this, aircraftRunways, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 }
@@ -145,6 +205,8 @@ AircraftLanding::AircraftLanding(bool share, AircraftLanding& al) : MYSPACE(shar
 	timeAircrafts.update(*this, share, al.timeAircrafts);
 
 	timeAircraftsRunways.update(*this, share, al.timeAircraftsRunways);
+
+	aircraftSequence.update(*this, share, al.aircraftSequence);
 }
 
 AircraftLanding::~AircraftLanding()
@@ -156,10 +218,11 @@ IntVar AircraftLanding::cost() const
 	return costVar;
 }
 
-void AircraftLanding::print(ostream& os, bool verbose)
+void AircraftLanding::print(ostream& os, bool verbose) const
 {
 	os << "Solution: (cost: " << cost().val() << ") "<<endl;
 	os << "Times: " << aircraftTimes << endl;
+	os << "seq: " << aircraftSequence << endl;
 	os << "Runways: " << aircraftRunways << endl;
 	os << "Runways2: " << runwayAircrafts << endl;
 
@@ -167,7 +230,7 @@ void AircraftLanding::print(ostream& os, bool verbose)
 	if (verbose) {
 		os << "timeair: " << timeAircrafts << endl;
 		for (unsigned int i=0; i<instance.runways.size(); i++) {
-			os << "timeair rw " << i << ": " << timeAircraftsRunways.slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
+			os << "timeair rw " << i << ": " << ((IntVarArray)(timeAircraftsRunways)).slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
 
 		}
 

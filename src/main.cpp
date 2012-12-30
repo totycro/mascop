@@ -3,6 +3,8 @@
 
 #include "aircraftlanding.h"
 
+#include <gecode/gist.hh>
+
 int main(int argc, char **argv) {
 	AircraftLanding * al;
 
@@ -18,6 +20,15 @@ int main(int argc, char **argv) {
 	}
 	*/
 
+	if (false) {
+		Gist::Print<AircraftLanding> p("al");
+		Gist::Options o;
+		o.inspect.click(&p);
+		Gist::bab(al,o);
+	}
+
+
+	if (true)
 	{
 		cout << "running bab\n";
 
