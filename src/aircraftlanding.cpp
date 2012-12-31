@@ -89,22 +89,21 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	}
 
-	timeAircraftsRunways = IntVarArray(*this, instance.periods * runwaysNum, -1, aircraftsNum); // allow unassigned
+	timeRunwaysAircrafts = IntVarArray(*this, instance.periods * runwaysNum, -1, aircraftsNum); // allow unassigned
 
 
 	// 3-dimensional repr:
 
 	for (uint i=0; i<aircraftsNum; i++) {
-		// timeAircraftsRunwaysMatrix [ aircraftRunways[i] ] = i
 		IntVar iVar(*this, i, i);
 		// gecode fail, doesn't suport as matrix, but this:
-		element(*this, timeAircraftsRunways, expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]), iVar);
+		element(*this, timeRunwaysAircrafts, expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]), iVar);
 	}
 
 	IntVar varInvalid(*this, -1, -1);
 
 	// unused spaces are -1
-	count(*this, timeAircraftsRunways, varInvalid, IRT_EQ, timeAircraftsRunways.size() - aircraftsNum);
+	count(*this, timeRunwaysAircrafts, varInvalid, IRT_EQ, timeRunwaysAircrafts.size() - aircraftsNum);
 
 	// runway limitations
 	for (uint i=0; i<runwaysNum; i++) {
@@ -114,11 +113,10 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 			for (uint k=rw->unavailableStart[j]; k<rw->unavailableEnd[j]; k++) {
 				//cout << "deact: " << (<< endl;
-				element(*this, timeAircraftsRunways, expr(*this, (i*instance.periods) +  k), varInvalid);
+				element(*this, timeRunwaysAircrafts, expr(*this, (i*instance.periods) +  k), varInvalid);
 			}
 		}
 	}
-
 
 	// sets for each period with aircrafts that land then (all runways)
 	timeAircrafts = SetVarArray(*this, instance.periods, IntSet::empty, IntSet(0, aircraftsNum), 0, runwaysNum);
@@ -130,18 +128,6 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	// max landings
 	for (unsigned int i=0; i+30<instance.periods; i++) {
-
-		/*
-		if (max_old) {
-			IntVarArray noElems(*this, 30, 0, aircraftsNum);
-
-			for (unsigned int j=0; j<30; j++) {
-				cardinality(*this, timeAircrafts[i+j], noElems[j]);
-			}
-			rel(*this, sum(noElems) <= instance.max_landings_in_30_mins);
-		} else {
-			*/
-			//*/
 
 			SetVar uni(*this, IntSet::empty, IntSet(0, aircraftsNum), 0, instance.max_landings_in_30_mins);
 			//SetVar uni(*this);
@@ -156,7 +142,7 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 	// depending on type, two airplanes have to have to be scheduled a few periods apart
 	// (this also prevents planes landing at the same time)
-	/*
+#if 0
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		for (unsigned int j=0; j<aircraftsNum; j++) {
 			if (j == i) {
@@ -168,35 +154,77 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 			BoolVar sameRunway = expr(*this, aircraftRunways[i] == aircraftRunways[j]);
 
-			BoolVar isBefore = expr(*this, aircraftTimes[i] <= aircraftTimes[j]);
+			BoolVar isBefore = expr(*this, aircraftTimes[i] < aircraftTimes[j]);
 
-			BoolVar maintainsDelay = expr(*this, aircraftTimes[i] + minDelay < aircraftTimes[j]);
+			BoolVar maintainsDelay = expr(*this, aircraftTimes[i] + minDelay <= aircraftTimes[j]);
 
-			//rel(*this, (sameRunway && isBefore) >> maintainsDelay  );
+			rel(*this, (sameRunway && isBefore) >> maintainsDelay  );
+			//rel(*this, isBefore >> maintainsDelay  );
 			//rel(*this, !(sameRunway && isBefore && (!maintainsDelay) ) );
 		}
 	}
-	*/
+#endif
 
-	//better, with index to next runway overlap problem
-	if (false) {
+// same as above, but less constraints
+#if 0
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		for (unsigned int j=i+1; j<aircraftsNum; j++) {
+
+			// get minimum gap depending on type (statically known)
+			int minDelay = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
 			int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
 			int minDelay_ji = instance.sequenceDelays[instance.aircrafts[j]->type][instance.aircrafts[i]->type];
 
-			IntVar iPos = expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]);
-			IntVar jPos = expr(*this, (aircraftRunways[j]*instance.periods) + aircraftTimes[j]);
+			BoolVar sameRunway = expr(*this, aircraftRunways[i] == aircraftRunways[j]);
 
-			BoolVar maintainsDelay_ij = expr(*this, iPos + minDelay_ij < jPos);
-			BoolVar maintainsDelay_ji = expr(*this, jPos + minDelay_ji < iPos);
+			//BoolVar isBefore = expr(*this, aircraftTimes[i] < aircraftTimes[j]);
 
-			//cerr << "p " << minDelay_ij << " " << minDelay_ji << endl;
+			BoolVar isBefore_ij = expr(*this, aircraftTimes[i] < aircraftTimes[j]);
+			//BoolVar isBefore_ji = expr(*this, aircraftTimes[j] < aircraftTimes[i]);
 
-			rel(*this, maintainsDelay_ij || maintainsDelay_ji);
+			//BoolVar maintainsDelay = expr(*this, aircraftTimes[i] + minDelay <= aircraftTimes[j]);
+
+			BoolVar maintainsDelay_ij = expr(*this, aircraftTimes[i] + minDelay_ij <= aircraftTimes[j]);
+			BoolVar maintainsDelay_ji = expr(*this, aircraftTimes[j] + minDelay_ji <= aircraftTimes[i]);
+
+			//rel(*this, !sameRunway || ( ( isBefore_ij >> maintainsDelay_ij ) && ( isBefore_ji >> maintainsDelay_ji) ) );
+			rel(*this, !sameRunway || ( ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
 		}
 	}
-}
+#endif
+
+	//better, with index to next runway overlap problem
+#if 1
+		for (unsigned int i=0; i<aircraftsNum; i++) {
+			for (unsigned int j=i+1; j<aircraftsNum; j++) {
+				int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
+				int minDelay_ji = instance.sequenceDelays[instance.aircrafts[j]->type][instance.aircrafts[i]->type];
+
+				/*
+				IntVar iPos = expr(*this, (aircraftRunways[i]*instance.periods) + aircraftTimes[i]);
+				IntVar jPos = expr(*this, (aircraftRunways[j]*instance.periods) + aircraftTimes[j]);
+				*/
+
+				BoolVar sameRunway = expr(*this, aircraftRunways[i] == aircraftRunways[j]);
+
+
+				IntVar iPos(*this, 0, runwaysNum*instance.periods);
+				IntVar jPos(*this, 0, runwaysNum*instance.periods);
+				element(*this, timeRunwaysAircrafts, iPos, i);
+				element(*this, timeRunwaysAircrafts, jPos, j);
+
+				BoolVar isBefore_ij = expr(*this, iPos < jPos);
+
+				BoolVar maintainsDelay_ij = expr(*this, iPos + minDelay_ij <= jPos);
+				BoolVar maintainsDelay_ji = expr(*this, jPos + minDelay_ji <= iPos);
+
+				//cerr << "p " << minDelay_ij << " " << minDelay_ji << endl;
+
+				//rel(*this, (!sameRunway) || maintainsDelay_ij || maintainsDelay_ji);
+			rel(*this, !sameRunway || ( ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
+			}
+		}
+#endif
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_RANGE_MAX);
@@ -206,12 +234,14 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 
 	branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
+	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MAX, INT_VAL_MED);
+	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
 	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_RND);
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
-	branch(*this, aircraftRunways, INT_VAR_SIZE_MIN, INT_VAL_MAX);
+	branch(*this, aircraftRunways, INT_VAR_AFC_MAX, INT_VAL_MAX);
 }
 
 Space* AircraftLanding::copy(bool share)
@@ -227,7 +257,7 @@ AircraftLanding::AircraftLanding(bool share, AircraftLanding& al) : MYSPACE(shar
 	//runwayAircrafts.update(*this, share, al.runwayAircrafts);
 	timeAircrafts.update(*this, share, al.timeAircrafts);
 
-	timeAircraftsRunways.update(*this, share, al.timeAircraftsRunways);
+	timeRunwaysAircrafts.update(*this, share, al.timeRunwaysAircrafts);
 
 	aircraftSequence.update(*this, share, al.aircraftSequence);
 }
@@ -246,7 +276,11 @@ void AircraftLanding::print(ostream& os, bool verbose) const
 	os << "Solution: (cost: " << cost().min() << "," << cost().max() << ") "<<endl;
 	os << "Times: " << aircraftTimes << endl;
 	os << "Runways: " << aircraftRunways << endl;
-	os << "timeair: " << timeAircrafts << endl;
+
+		for (unsigned int i=0; i<instance.runways.size(); i++) {
+			os << "timeair rw " << i << ": " << ((IntVarArray)(timeRunwaysAircrafts)).slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
+		}
+	//os << "timeair: " << timeAircrafts << endl;
 	return;
 	//os << "Runways2: " << runwayAircrafts << endl;
 	os << "seq: " << aircraftSequence << endl;
@@ -255,8 +289,7 @@ void AircraftLanding::print(ostream& os, bool verbose) const
 	if (verbose) {
 		os << "timeair: " << timeAircrafts << endl;
 		for (unsigned int i=0; i<instance.runways.size(); i++) {
-			os << "timeair rw " << i << ": " << ((IntVarArray)(timeAircraftsRunways)).slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
-
+			os << "timeair rw " << i << ": " << ((IntVarArray)(timeRunwaysAircrafts)).slice(i*instance.periods, 1, (i+1) *instance.periods) << endl;
 		}
 
 		/*

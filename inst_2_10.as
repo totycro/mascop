@@ -1,7 +1,7 @@
 Aircrafts: 10
 Runways: 2
 Periods: 120
-Max_landings_in_30m: 4
+Max_landings_in_30m: 10
 
 Aircrafts_specification:
 l1 large 65 76 120 1 3

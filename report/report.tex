@@ -130,6 +130,8 @@ numbers=left
 \usepackage{marginnote}
 \reversemarginpar
 
+\newcommand{\mymarginnote}[1]{\marginnote{\footnotesize{#1}}}
+
 
 \begin{document}
 
@@ -145,7 +147,7 @@ This exercise deals with implementing the Aircraft Landing Problem, which is spe
 \newcommand{\Crunway}{\constr{RUNWAY}}
 \newcommand{\CseqDel}{\constr{SEQUENCE DELAY}}
 \newcommand{\CtypeSeq}{\constr{TYPE SEQUENCE}}
-\newcommand{\Clandings}{\constr{LANDINGS 30 MINS}}
+\newcommand{\Clandings}{\constr{LANDINGS IN 30 MINS}}
 \begin{description}
 	\item[\Ctime] Each aircraft has a minium, preferred and maximum time of landing.
 	\item[\Ccost] There are possibly different costs for airplanes being too late or too early.
@@ -161,20 +163,20 @@ This exercise deals with implementing the Aircraft Landing Problem, which is spe
 Due to my lack of major experience in any of the three mentioned fields, I decided to start by relatively freely thinking about and trying different possible ways of modeling.
 This phase should not have the concrete demand of yielding useable solutions but to produce experience and generate a feel as to which modeling decisions actually lead to correct results and furthermore which of the ones that are correct are computationally feasible.
 
-%\marginnote{function}
-\marginnote{\Ctime}
+%\mymarginnote{function}
+\mymarginnote{\Ctime}
 The first decision was to represent the times when aircrafts land as array of concrete periods \ilc{aircraftTimes} of the length of the number of aircrafts. Each entry corresponds to one aircraft.
 This gives a natural way of describing the time frame, in which it is possible for them to land, by specifying the domain for each entry to be this time as given by the instance.
 
-%\marginnote{cost function}
-\marginnote{\Ccost}
+%\mymarginnote{cost function}
+\mymarginnote{\Ccost}
 This representation also allows to model the cost function quite easily.
 Since being late and early is punished by different costs, it is necessary to calculate their values separately.
 The amount of for instance delay for an aircraft \ilc{i} is given by \ilc{max(0, aircraftTimes[i] - instance.aircraft[i].preferredTime)}.
 Using this, an array of delays can be constructed, which is suitable for use with the \ilc{linear}-constraint in combination with the cost vector.
 The resulting value summed up with an analoguously constructed value for being too early make up the cost value.
 
-\marginnote{\Clandings}
+\mymarginnote{\Clandings}
 In order to represent the number of landings within a certain time frame, a different representation has to be found.
 As this constraint concerns ranges of periods rather than aircrafts, I employed a set array \ilc{timeAircrafts}, whose entries represent the set of airplanes landing at the respective periods.
 It is linked to \ilc{aircraftTimes} by requiring that the index of the airplane \ilc{i} is an element of \ilc{timeAircrafts[ aircraftTimes[ i ] ]}.
@@ -187,7 +189,7 @@ This suggests that the internal propagation mechanism of Gecode can in some case
 
 % branching
 \section{Investigations on branching}
-%\marginnote{Branching}
+%\mymarginnote{Branching}
 Based on these constraints, it is possible to do investigations on the branching parameters. 
 For branching, strategies can be selected for which variable to branch on as well as which values of the domain to pick.
 It is easily empirically evident that these parameters change the required computation time by multiple orders of magnitude and decide whether a formulation finishes within instant or is computaitonally infeasible.
@@ -247,13 +249,33 @@ Since preferred values for landing times of common instances are somewhere betwe
 Choosing values that split the domain are not particularly efficient as the results show for \ilc{INT\_VAL\_SPLIT\_MAX} (\ilc{INT\_VAL\_SPLIT\_MIN} showed a comparable behaviour and is therefore omitted in the table)
 
 Due to these investigations, future tests are mostly conducted using \ilc{INT\_VAR\_SIZE\_MIN} or \ilc{INT\_VAR\_AFC\_MAX} in combination with \ilc{INT\_VAL\_MED} since they have proven their efficiency in some instances of the problem, but for other cases, other configurations might very well be superior.
+In fact on some larger instances, \ilc{INT\_VAR\_AFC\_MAX} outperforms \ilc{INT\_VAR\_SIZE\_MIN} by an order of magnitude, which suggests that in these cases, variables with small domains aren't necessarily the ones that often lead to quick failures, but the accumulated failure count statistics is capable of determining the promising ones.
 
 \section{Further constraints}
 
-\marginnote{\Crunway}
+\mymarginnote{\Crunway}
 Up to this point, the assigment to runways has not been considered. 
 To model the availability of runways, it is necessary to not only assign the planes to runways, but also to combine it with temporal information, i.e. airplanes only can't be assigned to runways during certain periods of time.
 As first step, aircrafts are assigned to runways using a vector \ilc{aircraftRunways} similar to \ilc{aircraftTimes}. 
+
+Then, information about time is taken into account in a (conceptually) two-dimensional array \ilc{timeAircraftsRunways}, whose dimensions are time ($0\dots$number of periods) and runways ($0\dots$number of runways). A simple \ilc{element}-constraint forces correspond entries of aircrafts to their index \ilc{i}: \ilc{element(timeAircraftsRunways, (periods * aircraftRunways[i]) + aircraftTimes[i], i)}.
+As a side-effect, it is now ensured that no two planes can land on the same runway at the same time.
+Now it is conveniently possible to model runway unavailabilities by setting the respective values for an aircraft to an invalid value such as \ilc{-1}.
+
+\mymarginnote{\CseqDel}
+Since the required delays between aircrafts depend not only on their types, but also on the sequence of their types, it is necessary to encode information about the sequence in the model, whereas the type information is statically known.
+This constrained can be expressed by an implication: For each pair of airplane \ilc{i} and \ilc{j}, \ilc{i$\neq$j}, if \ilc{i} lands before \ilc{j} on the same runway, the landing time of \ilc{i} has to be smaller then the landing time of \ilc{j} minus the delay depending on the types of \ilc{i} and \ilc{j}.
+Since implications are essentially disjunctions, this makes it harder to consider branches as failed and in fact makes most instances of more than about 15 airplanes infeasible.
+
+It is possible to optimise these constraints by using logical simplifications in order to combine constraints: If the runways differ, neither direction of the delay needs to be considered. Furthermore, since the airplanes cannot land at the same time as ensured by \Crunway, we can deduce that if one airplane lands before the other one, the other one does not land before the first one and vice verca. Therefore the constraint can be reduced to \ilc{!sameRunway || ( (isBefore\_ij \&\& maintainsDelay\_ij) || maintainsDelay\_ji )} and only needs to be stated for each \ilc{i} and \ilc{j} with \ilc{i<j}, thereby halvening the number of constraints.
+The effect of this optimisation strongly depends on the input instance: There are some where the speedup is negligible, on one particular instance a reduction of the number of expanded nodes from 5.5 million to just 7 thousand has been observed (resulting in a wall clock time reduction from 7 minutes to one second).
+% 3_15
+The general picture of tests with these variants suggest that the impact of this constraint on the search space is a measure of the amount of effect of this optimisation.
+
+This formulation however still is hardly feasible for instances with more than 20 aircrafts. 
+
+
+
  
 
 
