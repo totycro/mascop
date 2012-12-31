@@ -234,6 +234,7 @@ src/main.o: /usr/include/gecode/search/options.hpp
 src/main.o: /usr/include/gecode/search/dfs.hpp
 src/main.o: /usr/include/gecode/search/bab.hpp
 src/main.o: /usr/include/gecode/search/restart.hpp
+src/main.o: /usr/include/gecode/gist.hh /usr/include/gecode/gist/gist.hpp
 src/aircraftlanding.o: src/aircraftlanding.h src/instance.h
 src/aircraftlanding.o: /usr/include/gecode/int.hh
 src/aircraftlanding.o: /usr/include/gecode/kernel.hh
@@ -423,4 +424,19 @@ src/aircraftlanding.o: /usr/include/gecode/search/bab.hpp
 src/aircraftlanding.o: /usr/include/gecode/search/restart.hpp
 src/aircraftlanding.o: /usr/include/gecode/gist.hh
 src/aircraftlanding.o: /usr/include/gecode/gist/gist.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/sequence.hh
+src/aircraftlanding.o: /usr/include/gecode/set/rel.hh
+src/aircraftlanding.o: /usr/include/gecode/set/rel/common.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/subset.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/nosubset.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/re-subset.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/eq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/re-eq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/nq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/lq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel/re-lq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/rel-op/common.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/sequence/common.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/sequence/seq.hpp
+src/aircraftlanding.o: /usr/include/gecode/set/sequence/seq-u.hpp
 src/instance.o: src/instance.h

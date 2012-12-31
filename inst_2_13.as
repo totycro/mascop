@@ -1,7 +1,7 @@
 Aircrafts: 13
 Runways: 2
 Periods: 120
-Max_landings_in_30m: 10
+Max_landings_in_30m: 7
 
 Aircrafts_specification:
 m1 medium 47 57 90 1 1

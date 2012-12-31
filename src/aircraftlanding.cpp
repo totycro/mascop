@@ -5,6 +5,8 @@
 #include <gecode/int.hh>
 #include <gecode/set/sequence.hh>
 
+#include <fstream>
+
 #include "instance.h"
 
 AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
@@ -140,6 +142,37 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 		}
 	//}
 
+	int noOv = 0;
+	int noOvDel = 0;
+	int all = 0;
+	for (unsigned int i=0; i<aircraftsNum; i++) {
+		for (unsigned int j=i+1; j<aircraftsNum; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
+			int minDelay_ji = instance.sequenceDelays[instance.aircrafts[j]->type][instance.aircrafts[i]->type];
+
+			Instance::Aircraft *ai = instance.aircrafts[i];
+			Instance::Aircraft *aj = instance.aircrafts[j];
+
+			if (ai->max < aj->min || ai->min > aj->max) {
+				noOv++;
+			}
+
+			if (ai->max + minDelay_ij < aj->min || ai->min > aj->max + minDelay_ji) {
+				noOvDel++;
+			}
+			all++;
+		}
+	}
+
+	ofstream f("/tmp/dat.dump", ios::trunc);
+	f << "all: " << all << endl;
+	f << "noOv: " << noOv << endl;
+	f << "noOvDel: " << noOvDel << endl;
+
 	// depending on type, two airplanes have to have to be scheduled a few periods apart
 	// (this also prevents planes landing at the same time)
 #if 0
@@ -165,15 +198,25 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	}
 #endif
 
+#define delay_old 1
+
 // same as above, but less constraints
-#if 0
+#if delay_old
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		for (unsigned int j=i+1; j<aircraftsNum; j++) {
 
+
 			// get minimum gap depending on type (statically known)
-			int minDelay = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
+			//int minDelay = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
 			int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
 			int minDelay_ji = instance.sequenceDelays[instance.aircrafts[j]->type][instance.aircrafts[i]->type];
+
+			Instance::Aircraft *ai = instance.aircrafts[i];
+			Instance::Aircraft *aj = instance.aircrafts[j];
+
+			if (ai->max + minDelay_ij < aj->min || ai->min > aj->max + minDelay_ji) {
+				continue; // no overlap possible
+			}
 
 			BoolVar sameRunway = expr(*this, aircraftRunways[i] == aircraftRunways[j]);
 
@@ -189,12 +232,13 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 
 			//rel(*this, !sameRunway || ( ( isBefore_ij >> maintainsDelay_ij ) && ( isBefore_ji >> maintainsDelay_ji) ) );
 			rel(*this, !sameRunway || ( ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
+			//rel(*this, !sameRunway || ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
 		}
 	}
 #endif
 
 	//better, with index to next runway overlap problem
-#if 1
+#if ! delay_old
 		for (unsigned int i=0; i<aircraftsNum; i++) {
 			for (unsigned int j=i+1; j<aircraftsNum; j++) {
 				int minDelay_ij = instance.sequenceDelays[instance.aircrafts[i]->type][instance.aircrafts[j]->type];
@@ -221,7 +265,7 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 				//cerr << "p " << minDelay_ij << " " << minDelay_ji << endl;
 
 				//rel(*this, (!sameRunway) || maintainsDelay_ij || maintainsDelay_ji);
-			rel(*this, !sameRunway || ( ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
+			rel(*this, ( ( isBefore_ij && maintainsDelay_ij )  || maintainsDelay_ji ) );
 			}
 		}
 #endif
@@ -233,10 +277,9 @@ AircraftLanding::AircraftLanding(const char* filename) : instance(filename)
 	//branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MAX);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 
-	branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
+	//branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MAX, INT_VAL_MED);
-	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
-	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
+	branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_RND);
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);

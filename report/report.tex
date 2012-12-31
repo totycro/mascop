@@ -250,6 +250,7 @@ Choosing values that split the domain are not particularly efficient as the resu
 
 Due to these investigations, future tests are mostly conducted using \ilc{INT\_VAR\_SIZE\_MIN} or \ilc{INT\_VAR\_AFC\_MAX} in combination with \ilc{INT\_VAL\_MED} since they have proven their efficiency in some instances of the problem, but for other cases, other configurations might very well be superior.
 In fact on some larger instances, \ilc{INT\_VAR\_AFC\_MAX} outperforms \ilc{INT\_VAR\_SIZE\_MIN} by an order of magnitude, which suggests that in these cases, variables with small domains aren't necessarily the ones that often lead to quick failures, but the accumulated failure count statistics is capable of determining the promising ones.
+This observation however cannot be generalized as there are counterexamples, in which \ilc{INT\_VAR\_AFC\_MAX} yields problems at a certain stage during the optimisation. There, it is most likely that certain choices invalidate the empirical data collected in other branches, which causes bad selections with respect to the current partial assignment.
 
 \section{Further constraints}
 
@@ -272,11 +273,12 @@ The effect of this optimisation strongly depends on the input instance: There ar
 % 3_15
 The general picture of tests with these variants suggest that the impact of this constraint on the search space is a measure of the amount of effect of this optimisation.
 
-This formulation however still is hardly feasible for instances with more than 20 aircrafts. 
+This formulation however still is hardly feasible for instances with more than 20 aircrafts. As another variation, I tried to instead of using time aircraft landing time of the \ilc{aircraftTimes}-array to use the position in \ilc{timeAircraftsRunways}.
+This way, it would be possible to skip the check for runways, since the index of aircrafts landing in different runways is far appart and therefore automatically satisfies one one the delay requirements (except for border cases at the beginning and end of the time frame).
+However getting rid of this one disjunct this proved to be way less efficient as it requires extra work in calculating the index in \ilc{timeAircraftsRunways} (even with the relaxation of not considering said border cases).
 
+As further optimisation, it is possible to omit constraints for those pairs of aircrafts, whose minimum and maximum landing times are that far apart that it there is no valid assigment which violates the \CseqDel-constraint. This however only has negligible effect.
 
-
- 
 
 
 
