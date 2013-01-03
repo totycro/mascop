@@ -179,13 +179,15 @@ The resulting value summed up with an analoguously constructed value for being t
 \mymarginnote{\Clandings}
 In order to represent the number of landings within a certain time frame, a different representation has to be found.
 As this constraint concerns ranges of periods rather than aircrafts, I employed a set array \ilc{timeAircrafts}, whose entries represent the set of airplanes landing at the respective periods.
-It is linked to \ilc{aircraftTimes} by requiring that the index of the airplane \ilc{i} is an element of \ilc{timeAircrafts[ aircraftTimes[ i ] ]}.
+It is linked to \ilc{aircraftTimes} by requiring that the index of the airplane \ilc{i} is an element of \ilc{timeAircrafts[ aircraftTimes[ i ] ]}. After formulating it on a low level using \ilc{element} and \ilc{rel} constraints, i discovered that there is a \ilc{channel}-constraint capable of this which results, depending on the instance, in faster runtimes of about a third.
 Now it's only necessary to sum up the cardinalities of these sets for each time frame of 30 minutes and stating that this sum has to be smaller than the number given by the instance.
 
 Since this simple constraint, if it is tight enough to actually matter, already leads to very bad runtimes for small instances (20-30 planes), I decided to try to vary it in order to allow for better propagation.
 In the variation, the union of all sets of airplanes for each 30-minute-frame is calculated in a set variable which whose maximal cardinality is bounded by the limit given by the instance.   
 As this change does not change the semantics, the number of solutions and failed nodes stays the same, but depending on the instance, the runtime is sometimes noticably affected with some instances being solved nearly twice as fast whereas others show no significant change.
 This suggests that the internal propagation mechanism of Gecode can in some cases deal more efficiently with the second variation.
+
+In order to calculate the union of all sets of airplanes of the corresponding time frame, I tried two different formulations: One by requiring that each of the relevant sets to be a subset of the union, and the other by using the union of the suitable \ilc{slice} of the array. Interestingly, the variant using the \ilc{slice}-operation, even by being on a somewhat higher level and therefore potentially giving Gecode more possibilities for optimisation, is slower by a factor of 2.
 
 % branching
 \section{Investigations on branching}
@@ -252,6 +254,8 @@ Due to these investigations, future tests are mostly conducted using \ilc{INT\_V
 In fact on some larger instances, \ilc{INT\_VAR\_AFC\_MAX} outperforms \ilc{INT\_VAR\_SIZE\_MIN} by an order of magnitude, which suggests that in these cases, variables with small domains aren't necessarily the ones that often lead to quick failures, but the accumulated failure count statistics is capable of determining the promising ones.
 This observation however cannot be generalized as there are counterexamples, in which \ilc{INT\_VAR\_AFC\_MAX} yields problems at a certain stage during the optimisation. There, it is most likely that certain choices invalidate the empirical data collected in other branches, which causes bad selections with respect to the current partial assignment.
 
+In order to profit from the strenghts of these two settings, \ilc{tiebreak(INT\_VAR\_SIZE\_MIN, INT\_VAR\_AFC\_MAX)} can be utilized. There are instances where it outperforms each setting individually by far, however this is not true in general. The effects of the different settings have been observed to very much depend on the input data. 
+
 \section{Further constraints}
 
 \mymarginnote{\Crunway}
@@ -280,6 +284,15 @@ However getting rid of this one disjunct this proved to be way less efficient as
 As further optimisation, it is possible to omit constraints for those pairs of aircrafts, whose minimum and maximum landing times are that far apart that it there is no valid assigment which violates the \CseqDel-constraint. This however only has negligible effect.
 
 
+
+\section{A different approach to finding the optimum}
+So far, the optimal solution has been calculated by using Gecode's branch and bound feature.
+It utilises bounds from valid solutions that it generates and posts them as upper limit for the cost when continuing the search process.
+Since the search isn't guided, it happens that a number of solutions are found that are far away from the optimum, which contain solution fragments with a high cost. 
+With this in mind, this idea can be reversed and instead of starting with no cost bound at all, the cost can be constrained to a very small number.
+This way, only a very narrow solution space is explored where expensive solution fragments are quickly disregarded (i.e. only a few airplanes are allowed to deviate from their preferred landing time).
+If the instance is suitable for this search process, it can be very effective.
+This is however not the case for instances with a costly optimal solution (except if it is possible to estimate a tight upper bound for said value).
 
 
 \end{document}

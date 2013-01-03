@@ -8,15 +8,16 @@
 int main(int argc, char **argv) {
 	AircraftLanding * al;
 
-	al = new AircraftLanding(argv[1]);
+	al = new AircraftLanding(argv[1], -1);
 
 	bool gist = false;
-	bool bab = true;
+	bool idfs = false;
 
 	if (argc > 2) {
 		if (string(argv[2]) == "gist") {
 			gist = true;
-			bab = false;
+		} else if (string(argv[2]) == "idfs") {
+			idfs = true;
 		} else {
 			cerr << "invalid parameter: " << argv[2] << endl;
 			exit(1);
@@ -38,10 +39,42 @@ int main(int argc, char **argv) {
 		Gist::Options o;
 		o.inspect.click(&p);
 		Gist::bab(al,o);
+		return 0;
 	}
 
+	if (idfs)
+	{
+		cout << "running iterative dfs\n";
+		bool found = false;
+		int limit = 2;
 
-	if (bab)
+		while (!found) {
+			delete al;
+
+			cerr << "running with limit " << limit  << endl;
+			al = new AircraftLanding(argv[1], limit);
+
+			DFS<AircraftLanding> dfs(al);
+
+			AircraftLanding * sol = dfs.next();
+
+			found = sol;
+
+			if (found) {
+				cerr << "found: \n";
+				sol->print(cerr);
+			} else {
+				if (limit < 10) {
+					limit += 5;
+				} else {
+					limit += 10;
+				}
+			}
+		}
+		return 0;
+	}
+
+	if (true)
 	{
 		cout << "running bab\n";
 
@@ -59,6 +92,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (lastSol != 0) {
+			cerr << "\nwinner:\n";
 			lastSol->print(cerr, true);
 		} else {
 			cerr << "\nno solution.\n";
@@ -79,6 +113,7 @@ int main(int argc, char **argv) {
 		cout << "propagate: " << stats.propagate << endl;
 
 	}
+
 
 	if (false)
 	{

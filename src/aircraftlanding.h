@@ -30,8 +30,12 @@ class AircraftLanding : public MYSPACE
 
 	IntVar costVar;
 
+	IntVarArray timesSequence;
+
+
+
 public:
-	AircraftLanding(const char* filename);
+	AircraftLanding(const char* filename, int maxCost);
 	AircraftLanding(bool share, AircraftLanding& al);
 	virtual ~AircraftLanding();
 	virtual Space* copy(bool share);
