@@ -99,6 +99,7 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	// seq constraints
 	// no sequence of 3 airplanes of same type
 	for (unsigned int i=0; i<Instance::NUMBER_OF_AIRCRAFT_TYPES; i++) {
+		//continue;
 
 		IntArgs aircraftIdsOfType;
 
@@ -108,11 +109,21 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 			}
 		}
 		cout << aircraftIdsOfType << endl;
+		if (aircraftIdsOfType.size() == 0) {
+			continue;
+		}
 
+		// of 4, at most 3 of one type -> not 4 in row
 		sequence(*this, aircraftSequence, IntSet(aircraftIdsOfType), 4, 0, 3);
-	}
-	//rel(*this, costVar <=6);
 
+		if (i == Instance::MEDIUM) {
+			// at most 2 of 5
+			sequence(*this, aircraftSequence, IntSet(aircraftIdsOfType), 5, 0, 2);
+		} else if (i == Instance::LARGE) {
+			// at most 1 of 5
+			sequence(*this, aircraftSequence, IntSet(aircraftIdsOfType), 5, 0, 1);
+		}
+	}
 
 
 
@@ -284,10 +295,10 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 
 	//branch(*this, aircraftTimes, INT_VAR_AFC_MAX, INT_VAL_MED);
-	//branch(*this, aircraftTimes, tiebreak(INT_VAR_SIZE_MIN, INT_VAR_AFC_MAX), INT_VAL_MED);
+	branch(*this, aircraftTimes, tiebreak(INT_VAR_SIZE_MIN, INT_VAR_AFC_MAX), INT_VAL_MED);
 	//branch(*this, aircraftTimes, tiebreak(INT_VAR_AFC_MAX, INT_VAR_SIZE_MIN), INT_VAL_MED);
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MAX, INT_VAL_MED);
-	branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
+	//branch(*this, aircraftTimes, INT_VAR_SIZE_MIN, INT_VAL_MED);
 
 	//branch(*this, aircraftTimes, INT_VAR_DEGREE_MIN, INT_VAL_RND);
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);

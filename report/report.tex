@@ -283,6 +283,13 @@ However getting rid of this one disjunct this proved to be way less efficient as
 
 As further optimisation, it is possible to omit constraints for those pairs of aircrafts, whose minimum and maximum landing times are that far apart that it there is no valid assigment which violates the \CseqDel-constraint. This however only has negligible effect.
 
+\mymarginnote{\CtypeSeq}
+The final constraint to be considered is \CtypeSeq.
+Gecode offers a fairly intuitive way of representing this type of constraints, which is \ilc{sequence}.
+It restricts the number of occurences of elements of a given set in sequences of a given length.
+So to disallow sequences of more than 3 aircrafts of the same type, it can be specified that in each sequence of length 4, at most 3 are allowed to be of the set of aircraft ids of an homogenous type.
+Constraints for medium and large aircrafts can be directly expressed by allowing only 1 or 2 out of any sequence of 5 aircrafts to be of a set of aircraft ids of the respective type.
+
 
 
 \section{A different approach to finding the optimum}
