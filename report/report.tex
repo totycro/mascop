@@ -1,7 +1,7 @@
 \documentclass[,%fontsize=11pt,%
 			paper=a4,% 
 			%DIV12, % mehr text pro seite als defaultyyp
-			DIV12,
+			DIV11,
 			%DIV=calc,%
 			%twoside=false,%
 			liststotoc,
@@ -89,6 +89,7 @@ positioning,fit,calc,decorations.text,shadows%
 \author{\hfill \\ Bernhard Mallinger \\ 0707663}
 %%\subtitle{}
 %\date{13. November 2007}
+%\date{13. November 2007}
 %\publishers{Betreut durch Univ.-Ass. Dipl.-Ing. Christian Schauer, BSc}
 
 %\usepackage{fancyhdr}
@@ -137,6 +138,8 @@ numbers=left
 
 \maketitle
 
+%\tableofcontents
+
 \section{The problem}
 
 This exercise deals with implementing the Aircraft Landing Problem, which is specified by the following constraints:
@@ -147,9 +150,9 @@ This exercise deals with implementing the Aircraft Landing Problem, which is spe
 \newcommand{\Crunway}{\constr{RUNWAY}}
 \newcommand{\CseqDel}{\constr{SEQUENCE DELAY}}
 \newcommand{\CtypeSeq}{\constr{TYPE SEQUENCE}}
-\newcommand{\Clandings}{\constr{LANDINGS IN 30 MINS}}
+\newcommand{\Clandings}{\constr{LANDINGS IN 30 MIN}}
 \begin{description}
-	\item[\Ctime] Each aircraft has a minium, preferred and maximum time of landing.
+	\item[\Ctime] Each aircraft has a minimum, preferred and maximum time of landing.
 	\item[\Ccost] There are possibly different costs for airplanes being too late or too early.
 	\item[\Crunway] Runways can be unavailable for certain periods.
 	\item[\CseqDel] Sequences of airplane landings have to keep a certain offset depending on the airplane types.
@@ -158,10 +161,13 @@ This exercise deals with implementing the Aircraft Landing Problem, which is spe
 
 \end{description}
 
-\section{Getting acquainted with the problem, modeling and Gecode}
+\section{Basic constraints}
 
-Due to my lack of major experience in any of the three mentioned fields, I decided to start by relatively freely thinking about and trying different possible ways of modeling.
-This phase should not have the concrete demand of yielding useable solutions but to produce experience and generate a feel as to which modeling decisions actually lead to correct results and furthermore which of the ones that are correct are computationally feasible.
+%Due to my lack of major experience in any of the three mentioned fields, I decided to start by relatively freely thinking about and trying different possible ways of modeling.
+%This phase should not have the concrete demand of yielding usable solutions but to produce experience and generate a feel as to which modeling decisions actually lead to correct results and furthermore which of the ones that are correct are computationally feasible.
+
+To get started, I decided to select a subset of basic constraints for implementation and testing with different parameters in order to get acquainted with constraint programming and Gecode and to get a feel for which decisions lead to correct results and furthermore which of the ones that are correct are actually computationally feasible.
+
 
 %\mymarginnote{function}
 \mymarginnote{\Ctime}
@@ -174,33 +180,34 @@ This representation also allows to model the cost function quite easily.
 Since being late and early is punished by different costs, it is necessary to calculate their values separately.
 The amount of for instance delay for an aircraft \ilc{i} is given by \ilc{max(0, aircraftTimes[i] - instance.aircraft[i].preferredTime)}.
 Using this, an array of delays can be constructed, which is suitable for use with the \ilc{linear}-constraint in combination with the cost vector.
-The resulting value summed up with an analoguously constructed value for being too early make up the cost value.
+The resulting value summed up with an analogously constructed value for being too early make up the cost value.
 
 \mymarginnote{\Clandings}
 In order to represent the number of landings within a certain time frame, a different representation has to be found.
 As this constraint concerns ranges of periods rather than aircrafts, I employed a set array \ilc{timeAircrafts}, whose entries represent the set of airplanes landing at the respective periods.
-It is linked to \ilc{aircraftTimes} by requiring that the index of the airplane \ilc{i} is an element of \ilc{timeAircrafts[ aircraftTimes[ i ] ]}. After formulating it on a low level using \ilc{element} and \ilc{rel} constraints, i discovered that there is a \ilc{channel}-constraint capable of this which results, depending on the instance, in faster runtimes of about a third.
+It is linked to \ilc{aircraftTimes} by requiring that the index of the airplane \ilc{i} is an element of \ilc{timeAircrafts[ aircraftTimes[ i ] ]}. After formulating it on a low level using \ilc{element} and \ilc{rel} constraints, I discovered that there is a \ilc{channel}-constraint which implements exactly this behaviour andt results, depending on the instance, in faster runtimes of about a third.
 Now it's only necessary to sum up the cardinalities of these sets for each time frame of 30 minutes and stating that this sum has to be smaller than the number given by the instance.
 
 Since this simple constraint, if it is tight enough to actually matter, already leads to very bad runtimes for small instances (20-30 planes), I decided to try to vary it in order to allow for better propagation.
 In the variation, the union of all sets of airplanes for each 30-minute-frame is calculated in a set variable which whose maximal cardinality is bounded by the limit given by the instance.   
-As this change does not change the semantics, the number of solutions and failed nodes stays the same, but depending on the instance, the runtime is sometimes noticably affected with some instances being solved nearly twice as fast whereas others show no significant change.
+As this change does not change the semantics, the number of solutions and failed nodes stays the same, but depending on the instance, the runtime is sometimes noticeably affected with some instances being solved nearly twice as fast whereas others show no significant change.
 This suggests that the internal propagation mechanism of Gecode can in some cases deal more efficiently with the second variation.
 
-In order to calculate the union of all sets of airplanes of the corresponding time frame, I tried two different formulations: One by requiring that each of the relevant sets to be a subset of the union, and the other by using the union of the suitable \ilc{slice} of the array. Interestingly, the variant using the \ilc{slice}-operation, even by being on a somewhat higher level and therefore potentially giving Gecode more possibilities for optimisation, is slower by a factor of 2.
+In order to calculate the union of all sets of airplanes of the corresponding time frame, I tried two different formulations: One by requiring that each of the relevant sets to be a subset of the union, and the other by using the union of the suitable \ilc{slice} of the array. Interestingly, the variant using the \ilc{slice}-operation, even by being on a somewhat higher level and therefore potentially giving Gecode more possibilities for optimisation, is slower by a factor of about 2.
 
 % branching
 \section{Investigations on branching}
 %\mymarginnote{Branching}
 Based on these constraints, it is possible to do investigations on the branching parameters. 
 For branching, strategies can be selected for which variable to branch on as well as which values of the domain to pick.
-It is easily empirically evident that these parameters change the required computation time by multiple orders of magnitude and decide whether a formulation finishes within instant or is computaitonally infeasible.
+It is easily empirically evident that these parameters change the required computation time by multiple orders of magnitude and decide whether a formulation finishes within instant or is computationally infeasible.
 
-Due to the size of the search space, comprehensive measurements and tests with larger instances or selectors, that seem less promising, would exceed the scope of this assignment. Therefore I'm focussing on managable instance sizes and take a closer look at certain cases.
+Due to the size of the search space, comprehensive measurements and tests with larger instances or selectors, that seem less promising, would exceed the scope of this assignment. Therefore a focus has been fixed on on manageable instance sizes and certain cases that exhibit interesting behaviour.
 
-Instances with no severe constaint are usually solved quickly using the \ilc{INT\_VAR\_NONE}-selector.
-However on instances that are already tightly constrainted by the \Clandings-constraint, the \ilc{INT\_VAR\_AFC\_MAX}- along with the \ilc{INT\_VAR\_SIZE\_MIN}-selector has shown to be exceptionally efficient.
-They have in common that they provoke quick failures, thereby cutting the search space. Other selectors preferring variables with large domains lead to disastrous runtimes up to the point where it makes no sense to include them in this investigation.
+Instances with no severe constraint are usually solved quickly using the \ilc{INT\_VAR\_NONE}-selector, which selects unassigned variables first.
+However on instances, that are already tightly constrained by the \Clandings-constraint, the \ilc{INT\_VAR\_AFC\_MAX}- along with the \ilc{INT\_VAR\_SIZE\_MIN}-selector has shown to be exceptionally efficient.
+They have in common that they provoke quick failures by chosing variables which have often lead to failure already or which have minimal domain size respectively, thereby cutting the search space quickly.
+Other selectors preferring variables with large domains lead to disastrous runtimes up to the point where it makes no sense to include them in this investigation.
 
 
 \begin{table}[htbp]
@@ -211,7 +218,7 @@ They have in common that they provoke quick failures, thereby cutting the search
 		 & \multicolumn{2}{c|}{\ilc{VAR\_AFC\_MAX}} &
 			\multicolumn{2}{c|}{\ilc{VAR\_SIZE\_MIN}}  &
 			\multicolumn{2}{c|}{\ilc{VAR\_NONE}}   \\
-	 3 per 30 mins&
+	 3 per 30 min&
 	 
 	 		time & nodes &
 	  	time & nodes &
@@ -245,61 +252,74 @@ They have in common that they provoke quick failures, thereby cutting the search
 \end{table}
 
 Table \ref{fig:res1} shows measurements using different combination of promising selectors.
-As not many constraints have been posted so far, ordering based on the degree of variables somewhat corresponds to having no special variable selection order. Therefore other selectors which are geared towards quick failures and are based on the node degree don't have any effect in this case.
+As not many constraints have been posted so far, ordering based on the degree of variables somewhat corresponds to having no special variable selection order. Therefore other selectors not mentioned here, which are geared towards quick failures and are based on the node degree, do not have significant effects in this case.
 
-Since preferred values for landing times of common instances are somewhere between the minima and maxima, choosing values around the extremes of the domain is not optimal as the direct comparison of \ilc{INT\_VAL\_MAX} and \ilc{INT\_VAL\_MED} shows, where the latter is faster by a factor of roughly 2.
+Since preferred values for landing times of common instances are somewhere between the minima and maxima, choosing values around the extremes of the domain is not optimal as the direct comparison of \ilc{INT\_VAL\_MAX} and \ilc{INT\_VAL\_MED} shows, where the latter is faster by a factor of roughly 2 for the first two selectors.
 Choosing values that split the domain are not particularly efficient as the results show for \ilc{INT\_VAL\_SPLIT\_MAX} (\ilc{INT\_VAL\_SPLIT\_MIN} showed a comparable behaviour and is therefore omitted in the table)
 
 Due to these investigations, future tests are mostly conducted using \ilc{INT\_VAR\_SIZE\_MIN} or \ilc{INT\_VAR\_AFC\_MAX} in combination with \ilc{INT\_VAL\_MED} since they have proven their efficiency in some instances of the problem, but for other cases, other configurations might very well be superior.
-In fact on some larger instances, \ilc{INT\_VAR\_AFC\_MAX} outperforms \ilc{INT\_VAR\_SIZE\_MIN} by an order of magnitude, which suggests that in these cases, variables with small domains aren't necessarily the ones that often lead to quick failures, but the accumulated failure count statistics is capable of determining the promising ones.
-This observation however cannot be generalized as there are counterexamples, in which \ilc{INT\_VAR\_AFC\_MAX} yields problems at a certain stage during the optimisation. There, it is most likely that certain choices invalidate the empirical data collected in other branches, which causes bad selections with respect to the current partial assignment.
+In fact on some larger instances, \ilc{INT\_VAR\_AFC\_MAX} outperforms \ilc{INT\_VAR\_SIZE\_MIN} by an order of magnitude, which suggests that in these cases, variables with small domains are not necessarily the ones that often lead to quick failures, but rather the accumulated failure count statistics is more capable of determining the promising ones.
+This observation however cannot be generalized as there are counterexamples, in which \ilc{INT\_VAR\_AFC\_MAX} yields problems at a certain stage during the optimisation.
+There, it is reasonable to assume that certain choices in the current partial assignment lead to a different situation, which invalidates the empircal data collected in other branches with different partial assignments. Since this old data is still used for decisions, they are not optimal with respect to the current situation.
 
-In order to profit from the strenghts of these two settings, \ilc{tiebreak(INT\_VAR\_SIZE\_MIN, INT\_VAR\_AFC\_MAX)} can be utilized. There are instances where it outperforms each setting individually by far, however this is not true in general. The effects of the different settings have been observed to very much depend on the input data. 
+In order to profit from the strengths of these two settings, \ilc{tiebreak(INT\_VAR\_SIZE\_MIN, INT\_VAR\_AFC\_MAX)} can be utilized. There are instances where it outperforms each setting individually by far, however this is again does not hold in general. The effects of the different settings have been observed to very much depend on the input data. 
 
 \section{Further constraints}
 
 \mymarginnote{\Crunway}
-Up to this point, the assigment to runways has not been considered. 
-To model the availability of runways, it is necessary to not only assign the planes to runways, but also to combine it with temporal information, i.e. airplanes only can't be assigned to runways during certain periods of time.
-As first step, aircrafts are assigned to runways using a vector \ilc{aircraftRunways} similar to \ilc{aircraftTimes}. 
+Up to this point, the assignment to runways has not been considered. 
+To model the availability of runways, it is necessary to not only assign the planes to runways, but also to combine it with temporal information, i.e. airplanes only cannot be assigned to runways during certain periods of time.
+As first step, aircrafts are assigned to runways using a vector \ilc{aircraftRunways} with a domain element for each runway similar to \ilc{aircraftTimes} for time slots. 
 
-Then, information about time is taken into account in a (conceptually) two-dimensional array \ilc{timeAircraftsRunways}, whose dimensions are time ($0\dots$number of periods) and runways ($0\dots$number of runways). A simple \ilc{element}-constraint forces correspond entries of aircrafts to their index \ilc{i}: \ilc{element(timeAircraftsRunways, (periods * aircraftRunways[i]) + aircraftTimes[i], i)}.
+Then, information about time is taken into account in a (conceptually) two-dimensional array \ilc{timeAircraftsRunways}, whose dimensions are time ($0\dots$number of periods) and runways ($0\dots$number of runways).
+A simple \ilc{element}-constraint simulating the two dimensions forces correspond entries of aircrafts to their index \ilc{i}: \ilc{element(timeAircraftsRunways, (periods * aircraftRunways[i]) + aircraftTimes[i], i)}.
 As a side-effect, it is now ensured that no two planes can land on the same runway at the same time.
 Now it is conveniently possible to model runway unavailabilities by setting the respective values for an aircraft to an invalid value such as \ilc{-1}.
 
 \mymarginnote{\CseqDel}
 Since the required delays between aircrafts depend not only on their types, but also on the sequence of their types, it is necessary to encode information about the sequence in the model, whereas the type information is statically known.
 This constrained can be expressed by an implication: For each pair of airplane \ilc{i} and \ilc{j}, \ilc{i$\neq$j}, if \ilc{i} lands before \ilc{j} on the same runway, the landing time of \ilc{i} has to be smaller then the landing time of \ilc{j} minus the delay depending on the types of \ilc{i} and \ilc{j}.
-Since implications are essentially disjunctions, this makes it harder to consider branches as failed and in fact makes most instances of more than about 15 airplanes infeasible.
+Since implications are essentially disjunctions, this makes it harder to consider branches as failed and in fact takes many instances of more than about 15 airplanes to the boundary of feasibility.
 
-It is possible to optimise these constraints by using logical simplifications in order to combine constraints: If the runways differ, neither direction of the delay needs to be considered. Furthermore, since the airplanes cannot land at the same time as ensured by \Crunway, we can deduce that if one airplane lands before the other one, the other one does not land before the first one and vice verca. Therefore the constraint can be reduced to \ilc{!sameRunway || ( (isBefore\_ij \&\& maintainsDelay\_ij) || maintainsDelay\_ji )} and only needs to be stated for each \ilc{i} and \ilc{j} with \ilc{i<j}, thereby halvening the number of constraints.
+It is possible to optimise these constraints by using logical simplifications in order to combine constraints: If the runways differ, neither direction of the delay needs to be considered. Furthermore, since the airplanes cannot land at the same time as ensured by \Crunway, we can deduce that if one airplane lands before the other one, the other one does not land before the first one and vice verca. Therefore the constraint can be reduced to \ilc{!sameRunway || ( (isBefore\_ij \&\& maintainsDelay\_ij) || maintainsDelay\_ji )} and only needs to be stated for each \ilc{i} and \ilc{j} with \ilc{i<j}, thereby halving the number of constraints.
 The effect of this optimisation strongly depends on the input instance: There are some where the speedup is negligible, on one particular instance a reduction of the number of expanded nodes from 5.5 million to just 7 thousand has been observed (resulting in a wall clock time reduction from 7 minutes to one second).
 % 3_15
 The general picture of tests with these variants suggest that the impact of this constraint on the search space is a measure of the amount of effect of this optimisation.
 
 This formulation however still is hardly feasible for instances with more than 20 aircrafts. As another variation, I tried to instead of using time aircraft landing time of the \ilc{aircraftTimes}-array to use the position in \ilc{timeAircraftsRunways}.
-This way, it would be possible to skip the check for runways, since the index of aircrafts landing in different runways is far appart and therefore automatically satisfies one one the delay requirements (except for border cases at the beginning and end of the time frame).
-However getting rid of this one disjunct this proved to be way less efficient as it requires extra work in calculating the index in \ilc{timeAircraftsRunways} (even with the relaxation of not considering said border cases).
+This way, it would be possible to skip the check for runways, since the index of aircrafts landing in different runways is far apart and therefore automatically satisfies one one the delay requirements (except for border cases at the beginning and end of the time frame).
+However getting rid of this one disjunct this proved to be clearly less efficient as it requires extra work in calculating the index in \ilc{timeAircraftsRunways} (even with the relaxation of not considering the mentioned border cases).
 
-As further optimisation, it is possible to omit constraints for those pairs of aircrafts, whose minimum and maximum landing times are that far apart that it there is no valid assigment which violates the \CseqDel-constraint. This however only has negligible effect.
+As further optimisation, it is possible to omit constraints for those pairs of aircrafts, whose minimum and maximum landing times are that far apart that it there is no valid assignment which violates the \CseqDel-constraint. This however only has negligible effect.
 
 \mymarginnote{\CtypeSeq}
 The final constraint to be considered is \CtypeSeq.
 Gecode offers a fairly intuitive way of representing this type of constraints, which is \ilc{sequence}.
-It restricts the number of occurences of elements of a given set in sequences of a given length.
-So to disallow sequences of more than 3 aircrafts of the same type, it can be specified that in each sequence of length 4, at most 3 are allowed to be of the set of aircraft ids of an homogenous type.
+It restricts the number of occurrences of elements of a given set in sequences of a given length.
+So to disallow sequences of more than 3 aircrafts of the same type, it can be specified that in each sequence of length 4, at most 3 are allowed to be of the set of aircraft ids of an homogeneous type.
 Constraints for medium and large aircrafts can be directly expressed by allowing only 1 or 2 out of any sequence of 5 aircrafts to be of a set of aircraft ids of the respective type.
+
+The difficult part of this aspect however is to obtain an array \ilc{aircraftSequence} in which the aircrafts are represented by their id (such that their type can be inferred) and ordered by their landing time. 
+There does not seem to be a designated channeling variant for this purpose, so I created an array with distinct integers up to the number of aircrafts, for which the condition holds that for all adjacent elements, the value in \ilc{aircraftTimes} when using the element as index yields a smaller or equal value for the left element when compared to the respective value of the right element. This ensures that in \ilc{aircraftSequence}, the aircrafts are actually ordered by their landing time. 
+To actually find the values of this array, it is however necessary to branch on it.
+This happens only as final step of the computation (i.e. the branching statement is last), as otherwise, it would impose an ordering uninformed of the landing time and other constraints, which also empirically has been observed to be hardly feasible.
+
+This constraint eliminates a large number of solutions of instances of the instance generator, which generates large aircrafts with a probability of $\frac{1}{3}$.
+For this reason, I altered the test data to contain more smaller aircrafts in order to actually being able to find a solution.
+However even with this simplification, instances comprising more than about 10 aircrafts have shown to be very hard to solve in reasonable time on a conventional machine.
+
 
 
 
 \section{A different approach to finding the optimum}
 So far, the optimal solution has been calculated by using Gecode's branch and bound feature.
 It utilises bounds from valid solutions that it generates and posts them as upper limit for the cost when continuing the search process.
-Since the search isn't guided, it happens that a number of solutions are found that are far away from the optimum, which contain solution fragments with a high cost. 
-With this in mind, this idea can be reversed and instead of starting with no cost bound at all, the cost can be constrained to a very small number.
+Since the search is not guided, it happens that a number of solutions are found that are far away from the optimum, which contain solution fragments with a high cost. 
+With this in mind, the original idea can be reversed and instead of starting with no cost bound at all, the cost can be constrained to a very small number.
 This way, only a very narrow solution space is explored where expensive solution fragments are quickly disregarded (i.e. only a few airplanes are allowed to deviate from their preferred landing time).
 If the instance is suitable for this search process, it can be very effective.
 This is however not the case for instances with a costly optimal solution (except if it is possible to estimate a tight upper bound for said value).
+
 
 
 \end{document}

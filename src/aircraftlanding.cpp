@@ -17,8 +17,6 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	aircraftTimes = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
 	aircraftRunways = IntVarArray(*this, aircraftsNum, 0, runwaysNum-1);
 
-	aircraftSequence = IntVarArray(*this, aircraftsNum, 0, aircraftsNum-1);
-
 	IntVar zero = IntVar(*this, 0,0); // helper variable
 	{
 		IntVarArray aircraftLateAmount = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
@@ -84,9 +82,11 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 		}
 	}
 
+	aircraftSequence = IntVarArray(*this, aircraftsNum, 0, aircraftsNum-1);
+
 	distinct(*this, aircraftSequence);
 	// times according to aircraftSequence
-	timesSequence = IntVarArray  (*this, aircraftsNum, 0, instance.periods-1);
+	timesSequence = IntVarArray(*this, aircraftsNum, 0, instance.periods-1);
 
 	for (unsigned int i=0; i<aircraftsNum; i++) {
 		element(*this, aircraftTimes, aircraftSequence[i], timesSequence[i]);
@@ -99,7 +99,6 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	// seq constraints
 	// no sequence of 3 airplanes of same type
 	for (unsigned int i=0; i<Instance::NUMBER_OF_AIRCRAFT_TYPES; i++) {
-		//continue;
 
 		IntArgs aircraftIdsOfType;
 
@@ -130,8 +129,6 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	// sets for each period with aircrafts that land then (all runways)
 	timeAircrafts = SetVarArray(*this, instance.periods, IntSet::empty, IntSet(0, aircraftsNum), 0, runwaysNum);
 	channel(*this, aircraftTimes, timeAircrafts);
-
-
 
 
 
@@ -304,6 +301,7 @@ AircraftLanding::AircraftLanding(const char* filename, int maxCost) : instance(f
 	//branch(*this, aircraftSequence, INT_VAR_DEGREE_MIN, INT_VAL_SPLIT_MIN);
 	//branch(*this, aircraftTimes, INT_VAR_NONE, INT_VAL_SPLIT_MIN);
 	branch(*this, aircraftRunways, INT_VAR_AFC_MAX, INT_VAL_MAX);
+
 	branch(*this, aircraftSequence, INT_VAR_SIZE_MIN, INT_VAL_MIN);
 }
 

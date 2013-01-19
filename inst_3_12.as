@@ -5,12 +5,12 @@ Max_landings_in_30m: 10
 
 Aircrafts_specification:
 s1 small 49 65 103 1 3
-l2 large 38 66 103 1 3
-l3 large 0 4 54 3 3
+l2 small 38 66 103 1 3
+l3 medium 0 4 54 3 3
 l4 large 90 112 120 3 3
 m5 medium 14 36 82 2 2
 l6 large 24 45 93 2 2
-l7 large 70 85 116 3 6
+l7 small 70 85 116 3 6
 s8 small 0 7 46 3 9
 m9 medium 13 25 67 1 1
 s10 small 39 51 95 2 4
